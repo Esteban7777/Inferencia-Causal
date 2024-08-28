@@ -1,0 +1,79 @@
+---
+title: "Tarea_I_Simulacion"
+author: "Wilmer & John Esteban & William"
+date: "2024-08-28"
+output: html_document
+---
+# Simulacion 
+
+El objetivo de este documento es presentar la simulacion de un proceso aleatorio aplicado a la educacion y al nivel de ingresos
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = T)
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+
+library(tidyverse)
+library(ggridges)
+library(broom)
+library(faux)
+
+```
+
+```{r}
+
+N=1000000
+
+income_aut = 100
+effect=10
+
+df <- tibble(
+    educ = rnorm(N, mean=11, sd= 9),
+    u = rnorm(N, mean=0, sd=36),
+    income = income_aut + effect*educ + u) %>% 
+    mutate(niv_educ=case_when(educ <= 5 ~ 0, 
+                              educ >5 & educ <=9 ~ 5, 
+                              educ >9 & educ <=11 ~ 9,
+                              educ >11 & educ <=16 ~ 11,
+                              educ >16 & educ <=18 ~ 16,
+                              educ >18 & educ <=20 ~ 18,
+                              educ > 20 ~ 20))
+```
+
+```{r}
+ggplot(df) + 
+  geom_histogram(aes(income), bins = 100, color="white", fill="green", alpha=0.5) + 
+  geom_histogram(aes(educ), bins = 100, color="white", fill="orange", alpha=0.5) +
+   geom_histogram(aes(u), bins = 100, color="white", fill="blue", alpha=0.5)+   theme_minimal() 
+```
+
+```{r}
+```
+
+
+```{r}
+ggplot(df, aes(x = u, y = niv_educ, group = niv_educ)) +
+ geom_density_ridges(  alpha = 0.3)  +  
+  coord_flip()  + theme_minimal()
+```
+
+
+```{r}
+
+ggplot(df, aes(x = u, y = niv_educ, group = niv_educ)) +
+geom_boxplot() +
+  coord_flip() 
+```
+```{r}
+ggplot(df, aes(x = income, y = niv_educ, group = niv_educ)) +
+ geom_density_ridges(alpha = 0.3)  +
+ geom_function(fun=function(x)  (-income_aut/effect) + (1/effect)*x,  xlim=c(100,400), color="orange")   +  
+  coord_flip()  +  theme_minimal() 
+```
+```{r}
+ggplot(df, aes(x = income, y = niv_educ, group = niv_educ)) +
+geom_boxplot() +
+  coord_flip() 
+```
+
