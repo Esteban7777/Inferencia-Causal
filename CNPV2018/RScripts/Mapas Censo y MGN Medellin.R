@@ -2,7 +2,7 @@ library(tidyverse)
 library(sf)
 library(readxl)
 
-MGN<-st_read("C:/Users/HP-Laptop/OneDrive - Universidad de Antioquia/Maestría en Economía/Evaluación de impacto/Inferencia-Causal/CNPV2018/Data/SHP_MGN2018_INTGRD_MANZ/MGN_ANM_MANZANA.shp")
+MGN<-st_read("C:/Users/HP-Laptop/OneDrive - Universidad de Antioquia/Maestría en Economía/Evaluación de impacto/2018/SHP_MGN2018_INTGRD_MANZ/MGN_ANM_MANZANA.shp")
 
 Manzanas_Censo <- read_excel("C:/Users/HP-Laptop/OneDrive - Universidad de Antioquia/Maestría en Economía/Evaluación de impacto/Inferencia-Causal/CNPV2018/Data/factMedellinManzanasConsolidado.xlsx")
 
