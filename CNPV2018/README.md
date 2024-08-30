@@ -8,4 +8,4 @@ En esta carpeta se encuentra la información del CNPV2018 a nivel de manzana cen
 
 *Mapas*: contiene mapas generados a partir del cruce del conjunto de datos de manzanas de Medellín y la información del Marco Geoestadístico Nacional del DANE.
 
-*RScript*: contiene los scripts utilizados para la manipulación de datos espaciales en R.
+*RScripts*: contiene los scripts utilizados para la manipulación de datos espaciales en R.
