@@ -1,13 +1,12 @@
 ---
-title: "Tarea_I_Simulacion"
-author: "Wilmer & John Esteban & William"
-date: "2024-08-28"
-output: html_document
+title: "Tarea 1 Simulación del efecto de la educación en los ingresos"
+author: "Wilmer Rojas & John Esteban Londoño & William Aguirre"
+date: "2024-08-30"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
 ---
-# Simulacion 
-
-El objetivo de este documento es presentar la simulacion de un proceso aleatorio aplicado a la educacion y al nivel de ingresos
-
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -18,11 +17,23 @@ library(tidyverse)
 library(ggridges)
 library(broom)
 library(faux)
-
+library(ggthemes)
+library(gridExtra)
 ```
 
-```{r}
+# Simulación
 
+## Introducción
+
+El objetivo de este documento es presentar la simulación de la relación causal de la educación sobre los ingresos de los individuos. Para ello partimos del siguiente proceso generador de datos: $$Ingreso= \beta\ +\alpha\ educación + \epsilon$$
+
+Donde $\alpha$ es el efecto que tiene la educación sobre el ingreso. Para efectos de la simulación, asumimos que el tamaño de este efecto es igual a 10. Adicionalmente, partimos del supuesto de que $\epsilon$ no está relacionado con la educación y por esta razón existe exogeneidad de la variable de interés.
+
+Para evidenciar la diferencia en la estimación por el método de mínimos cuadrados ordinarios cuando existe exogeneidad y cuando se presenta una correlación entre la variable explicativa (educación) y los no observables ($\epsilon$) se genera una segunda simulación con el siguiente procesos generador de datos: $$Ingreso= \beta\ +\alpha\ educación + \epsilon$$ $Donde$ $$E[educacion|\epsilon] \neq 0$$
+
+Al comparar las estimaciones por M.C.O. de los datos simulados con los dos procesos se logra evidenciar que el estimador es insesgado cuando se cumple el principio de exogeneidad. Sin embargo, la estimación cuando se viola este supuesto se aleja del parámetro poblacional debido al sesgo de selección.
+
+```{r}
 N=1000000
 
 income_aut = 100
@@ -39,45 +50,243 @@ df <- tibble(
                               educ >16 & educ <=18 ~ 16,
                               educ >18 & educ <=20 ~ 18,
                               educ > 20 ~ 20))
+
+
+df_1<-rnorm_multi(n=1000000,vars = 2,mu=c(11,0),sd=c(9,36),r=0.9,varnames = c('educ','u'))
+df_i <- tibble(income=income_aut + effect*df_1$educ + df_1$u )
+df_1<-cbind(df_i,df_1)
+
+df_1 <- df_1 %>%  mutate(niv_edu = case_when(educ <= 5 ~ 0, 
+                              educ >5 & educ <=9 ~ 5, 
+                              educ >9 & educ <=11 ~ 9,
+                              educ >11 & educ <=16 ~ 11,
+                              educ >16 & educ <=18 ~ 16,
+                              educ >18 & educ <=20 ~ 18,
+                              educ > 20 ~ 20))
 ```
 
 ```{r}
-ggplot(df) + 
-  geom_histogram(aes(income), bins = 100, color="white", fill="green", alpha=0.5) + 
-  geom_histogram(aes(educ), bins = 100, color="white", fill="orange", alpha=0.5) +
-   geom_histogram(aes(u), bins = 100, color="white", fill="blue", alpha=0.5)+   theme_minimal() 
+p1 <- ggplot(df) + 
+  geom_histogram(aes(income), bins = 100, color = "white", fill = "green", alpha = 0.5) + 
+  geom_histogram(aes(educ), bins = 100, color = "white", fill = "orange", alpha = 0.5) +
+  geom_histogram(aes(u), bins = 100, color="white", fill="blue", alpha=0.5)+
+  theme_economist_white() +
+  ggtitle("Distribución de Variables sin correlacion") +
+  labs(x = "Valores de las Variables", y = "Frecuencia") + 
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5),  
+    axis.title.x = element_text(face = "bold"),  
+    axis.title.y = element_text(face = "bold")
+  )
+
+
+p2 <- ggplot(df_1) + 
+  geom_histogram(aes(income), bins = 100, color = "white", fill = "green", alpha = 0.5) + 
+  geom_histogram(aes(educ), bins = 100, color = "white", fill = "orange", alpha = 0.5) +
+  geom_histogram(aes(u), bins = 100, color="white", fill="blue", alpha=0.5)+
+  theme_economist_white() +
+  ggtitle("Distribución de Variables con correlacion") +
+  labs(x = "Valores de las Variables", y = "Frecuencia") + 
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5),  
+    axis.title.x = element_text(face = "bold"),  
+    axis.title.y = element_text(face = "bold")
+  )
+
+
+grid.arrange(p1, p2, ncol = 2)
+```
+
+Dada la especificación del modelo, la distribución de las variables sigue una distribución normal en ambos escenarios , es decir la correlación entre las variable de tratamiento y el término de error (para este ejemplo, la habilidad) en la segunda simulación no afecta la distribución individual de la variable.
+
+```{r}
+p1 <- ggplot(df, aes(x = u, y = niv_educ, group = niv_educ)) +
+  geom_boxplot(alpha = 0.3) +  
+  coord_flip() +
+  theme_economist_white() +
+  ggtitle("Distribución de u por Nivel Educativo (df)") + 
+  labs(x = "u", y = "Nivel Educativo") +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    axis.title.x = element_text(face = "bold"),
+    axis.title.y = element_text(face = "bold")
+  )
+
+
+p2 <- ggplot(df_1, aes(x = u, y = niv_edu, group = niv_edu)) +
+  geom_boxplot(alpha = 0.3) +  
+  coord_flip() +
+  theme_economist_white() +
+  ggtitle("Distribución de u por Nivel Educativo (df_1)") + 
+  labs(x = "u", y = "Nivel Educativo") +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    axis.title.x = element_text(face = "bold"),
+    axis.title.y = element_text(face = "bold")
+  )
+
+
+grid.arrange(p1, p2, ncol = 2)
+```
+
+Para el ejercicio se definió una correlación entre la variable años de educación y el termino de error de 0.9. Esto produce que el término de error varie de forma incremental a mayor número de años de educación, es decir, a mayor numero de años de educación se observa un incremento en la media del término de error (correlación positiva) y por ende un mayor ingreso económico, esto introduce un sesgo de selección que produce una sobreestimación del efecto
+
+```{r}
+
+p1 <- ggplot(df, aes(x = income, y = niv_educ, group = niv_educ)) +
+  geom_density_ridges(alpha = 0.3) +
+  geom_function(fun = function(x) (-income_aut/effect) + (1/effect)*x, xlim = c(100, 400), color = "orange") +
+  coord_flip() +
+  theme_economist_white() +
+  ggtitle("Distribución de Income por Nivel Educativo (df)") + 
+  labs(x = "Income", y = "Nivel Educativo") +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    axis.title.x = element_text(face = "bold"),
+    axis.title.y = element_text(face = "bold")
+  )
+
+
+p2 <- ggplot(df_1, aes(x = income, y = niv_edu, group = niv_edu)) +
+  geom_density_ridges(alpha = 0.3) +
+  geom_function(fun = function(x) (-income_aut/effect) + (1/effect)*x, xlim = c(100, 400), color = "orange") +
+  coord_flip() +
+  theme_economist_white() +
+  ggtitle("Distribución de Income por Nivel Educativo (df_1)") + 
+  labs(x = "Income", y = "Nivel Educativo") +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    axis.title.x = element_text(face = "bold"),
+    axis.title.y = element_text(face = "bold")
+  )
+
+
+grid.arrange(p1, p2, ncol = 2)
+
+```
+
+En ambos casos se observa una correlación positiva entre el nivel educativo y el ingreso. No obstante, en la simulación 2, se tiene un efecto mayor (una pendiente más pronunciada) entre el nivel educativo y el ingreso, esto es secundario al sesgo de selección que sobreestima el efecto del nivel educativo.
+
+```{r Estimación y analisis, echo=FALSE}
+
+
+n_sample = 10000
+reg <- list()
+
+for (i in (1:1000)) {
+
+  
+  df_sample <- df[sample(nrow(df), n_sample),]
+  
+  reg[[i]] <-   lm(income ~ educ, data=df_sample) %>% 
+                tidy(conf.int = TRUE) %>%
+                filter(term=="educ") %>%
+                select(-term)
+  
+ 
+  
+  
+}
+reg <- bind_rows(reg) %>%
+            rownames_to_column(var = "reg")
+
+
+reg_1 <- list()
+for (i in (1:1000)) {
+
+  
+  df_sample <- df_1[sample(nrow(df_1), n_sample),]
+  
+  reg_1[[i]] <-   lm(income ~ educ, data=df_sample) %>% 
+                tidy(conf.int = TRUE) %>%
+                filter(term=="educ") %>%
+                select(-term)
+  
+ 
+  
+  
+}
+reg_1 <- bind_rows(reg_1) %>%
+            rownames_to_column(var = "reg")
+
+
 ```
 
 ```{r}
-```
 
+media_df <- mean(reg$estimate, na.rm = TRUE)
+media_df1 <- mean(reg_1$estimate, na.rm = TRUE)
+
+
+p1 <- ggplot(reg, aes(estimate)) + 
+  geom_histogram(color = "white", bins = 100, alpha = 0.5) + 
+  geom_vline(aes(xintercept = media_df), color = "red", linetype = "dashed") +
+  theme_economist_white() +
+  ggtitle("Distribución de Estimates (reg)") +
+  theme(plot.title = element_text(face = "bold", hjust = 0.5))
+
+
+p2 <- ggplot(reg_1, aes(estimate)) + 
+  geom_histogram(color = "white", bins = 100, alpha = 0.5) + 
+  geom_vline(aes(xintercept = media_df1), color = "red", linetype = "dashed") +
+  theme_economist_white() +
+  ggtitle("Distribución de Estimates (df1)") +
+  theme(plot.title = element_text(face = "bold", hjust = 0.5))
+
+
+
+grid.arrange(p1, p2, ncol = 2)
+
+```
 
 ```{r}
-ggplot(df, aes(x = u, y = niv_educ, group = niv_educ)) +
- geom_density_ridges(  alpha = 0.3)  +  
-  coord_flip()  + theme_minimal()
+df_h0 <- reg %>% 
+         select(estimate, conf.low, conf.high, reg)  %>%
+         mutate(h0=10,
+               rechaza_h0=ifelse(conf.low < h0 &  h0 < conf.high , "No", "Si")) %>%
+             arrange(estimate) %>%
+             mutate(reg=c(1:nrow(.)))
+
+df_h0_1 <- reg_1 %>% 
+  select(estimate, conf.low, conf.high, reg)  %>%
+  mutate(h0 = 10,
+         rechaza_h0 = ifelse(conf.low < h0 & h0 < conf.high, "No", "Si")) %>%
+  arrange(estimate) %>%
+  mutate(reg = c(1:nrow(.)))
+
+
+p1 <- ggplot(df_h0, aes(x = reg)) +
+  geom_linerange(aes(ymin = conf.low, ymax = conf.high, color = rechaza_h0), lwd = 0.1) + 
+  scale_color_manual(values = c("No"= "#999999","Si" = "#ef8a62")) +
+  geom_point(aes(y = estimate), size = 0.1) + 
+  geom_hline(aes(yintercept = h0), color = "red", linetype = "dashed") +
+  labs(y = "coef", x = "reg") +
+  theme_economist_white() +
+  ggtitle("Distribución de Coeficientes (reg)") +
+  theme(plot.title = element_text(face = "bold", hjust = 0.5))
+
+
+p2 <- ggplot(df_h0_1, aes(x = reg)) +
+  geom_linerange(aes(ymin = conf.low, ymax = conf.high, color = rechaza_h0), lwd = 0.1) + 
+  scale_color_manual(values = c("No"= "#999999","Si" = "#ef8a62")) +
+  geom_point(aes(y = estimate), size = 0.1) + 
+  geom_hline(aes(yintercept = h0), color = "red", linetype = "dashed") +
+  labs(y = "coef", x = "reg") +
+  theme_economist_white() +
+  ggtitle("Distribución de Coeficientes (reg_1)") +
+  theme(plot.title = element_text(face = "bold", hjust = 0.5))
+
+
+
+grid.arrange(p1, p2, ncol = 2)
 ```
 
+Se observa que cuando se cumple el supuesto de exogeneidad, el parámetro poblacional ($\alpha$) que representa el efecto de la educación sobre los ingresos se encuentra dentro del intervalo de confianza en el 95% de las estimaciones. Por otra parte, cuando violamos este supuesto en ningún caso se logra una estimación en la que el verdadero parámetro poblacional esté dentro del intervalo de confianza.
 
-```{r}
+# Conclusion
 
-ggplot(df, aes(x = u, y = niv_educ, group = niv_educ)) +
-geom_boxplot() +
-  coord_flip() 
-```
-```{r}
-ggplot(df, aes(x = income, y = niv_educ, group = niv_educ)) +
- geom_density_ridges(alpha = 0.3)  +
- geom_function(fun=function(x)  (-income_aut/effect) + (1/effect)*x,  xlim=c(100,400), color="orange")   +  
-  coord_flip()  +  theme_minimal() 
-```
-```{r}
-ggplot(df, aes(x = income, y = niv_educ, group = niv_educ)) +
-geom_boxplot() +
-  coord_flip() 
-```
+El objetivo de este ejercicio es evaluar los supuestos básicos del modelo de regresión lineal en situaciones en las que los datos no cumplen con las condiciones ideales del estimador. Inicialmente, se realizan estimaciones utilizando un modelo de regresión lineal en un contexto donde los datos son generados aleatoriamente, asumiendo que no existe correlación entre el término de error (habilidad) y el nivel de educación.
 
+Esto proporciona una referencia para evaluar el rendimiento del estimador bajo condiciones ideales. En una segunda fase, se introduce una correlación entre la educación y el término de error, reflejando una situación más realista donde el nivel de habilidad no observada puede influir tanto en el nivel educativo como en el ingreso. Esta correlación puede sesgar el estimador del impacto de la educación sobre el ingreso, ya que el término de error, que captura factores no observables que afectan el ingreso, también está relacionado con el nivel educativo.
 
-Hola este es un ensayo para aprender GIthub
-este es un segundo intro
-
+Como resultado, la estimación del efecto de la educación puede no reflejar con precisión la verdadera relación entre educación e ingreso. Este ejercicio subraya la importancia de verificar los supuestos básicos del modelo de regresión lineal, como la independencia entre el término de error y las variables explicativas, ya que la violación de estos supuestos puede llevar a estimaciones sesgadas e incorrectas, lo que resalta la necesidad de técnicas adicionales para obtener estimaciones más confiables en presencia de sesgo.
