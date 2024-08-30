@@ -3,9 +3,9 @@ title: "Tarea 1 Simulación del efecto de la educación en los ingresos"
 author: "Wilmer Rojas & John Esteban Londoño & William Aguirre"
 date: "2024-08-30"
 output:
-  word_document: default
-  html_document: default
   pdf_document: default
+  html_document: default
+  word_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -135,29 +135,31 @@ Para el ejercicio se definió una correlación entre la variable años de educac
 
 p1 <- ggplot(df, aes(x = income, y = niv_educ, group = niv_educ)) +
   geom_density_ridges(alpha = 0.3) +
-  geom_function(fun = function(x) (-income_aut/effect) + (1/effect)*x, xlim = c(100, 400), color = "orange") +
+  geom_function(fun = function(x) (-income_aut/effect) + (1/effect)*x, color = "orange",ylim=c(-300,600),xlim = c(100, 400)) +
   coord_flip() +
   theme_economist_white() +
   ggtitle("Distribución de Income por Nivel Educativo (df)") + 
   labs(x = "Income", y = "Nivel Educativo") +
   theme(
-    plot.title = element_text(face = "bold", hjust = 0.5),
-    axis.title.x = element_text(face = "bold"),
-    axis.title.y = element_text(face = "bold")
+    plot.title = element_text(face = "bold", hjust = 0.5,size =8),
+    axis.title.x = element_text(face = "bold", size = 6),
+    axis.title.y = element_text(face = "bold", size = 6)
   )
 
 
-p2 <- ggplot(df_1, aes(x = income, y = niv_edu, group = niv_edu)) +
+p2 <- ggplot(df_1, aes(x = income, y = niv_edu, group = niv_edu,)) +
   geom_density_ridges(alpha = 0.3) +
-  geom_function(fun = function(x) (-income_aut/effect) + (1/effect)*x, xlim = c(100, 400), color = "orange") +
+  geom_function(fun = function(x) (-income_aut/effect) + (1/effect)*x,
+                color = "orange",
+                ylim=c(-300,600),xlim = c(100, 400)) +
   coord_flip() +
   theme_economist_white() +
   ggtitle("Distribución de Income por Nivel Educativo (df_1)") + 
   labs(x = "Income", y = "Nivel Educativo") +
   theme(
-    plot.title = element_text(face = "bold", hjust = 0.5),
-    axis.title.x = element_text(face = "bold"),
-    axis.title.y = element_text(face = "bold")
+    plot.title = element_text(face = "bold", hjust = 0.5,size =8 ),
+    axis.title.x = element_text(face = "bold",size = 6),
+    axis.title.y = element_text(face = "bold", size = 6)
   )
 
 
@@ -239,6 +241,9 @@ grid.arrange(p1, p2, ncol = 2)
 
 ```
 
+En esta gráfica se puede observar la diferencia entre el efecto de la variable de tratamiento nivel educativo y el ingreso. En el lado izquierdo, cuando no hay correlación entre el nivel educativo y la habilidad, el tamaño del efecto estimado es igual al especificado (tamaño efecto =10), mientras que en el caso de la simulación 2, el efecto estimado es mayor al efecto definido (efecto estimado = 13.6), es decir  el $\hat\beta$ ≠ β poblacional, o dicho de otra forma
+
+$$\hat\beta =  β + sesgo\space de \space selección$$
 ```{r}
 df_h0 <- reg %>% 
          select(estimate, conf.low, conf.high, reg)  %>%
