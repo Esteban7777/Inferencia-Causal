@@ -40,7 +40,7 @@ income_aut = 100
 effect=10
 
 df <- tibble(
-    educ = rnorm(N, mean=11, sd= 9),
+    educ = pmax(rnorm(N, mean=11, sd= 9),0),
     u = rnorm(N, mean=0, sd=36),
     income = income_aut + effect*educ + u) %>% 
     mutate(niv_educ=case_when(educ <= 5 ~ 0, 
@@ -49,7 +49,8 @@ df <- tibble(
                               educ >11 & educ <=16 ~ 11,
                               educ >16 & educ <=18 ~ 16,
                               educ >18 & educ <=20 ~ 18,
-                              educ > 20 ~ 20))
+                              educ > 20 ~ 20),
+           income = pmax(income, 0))
 
 
 df_1<-rnorm_multi(n=1000000,vars = 2,mu=c(11,0),sd=c(9,36),r=0.9,varnames = c('educ','u'))
@@ -173,43 +174,22 @@ En ambos casos se observa una correlación positiva entre el nivel educativo y e
 
 
 n_sample = 10000
-reg <- list()
+n_iterations = 1000
 
-for (i in (1:1000)) {
 
-  
-  df_sample <- df[sample(nrow(df), n_sample),]
-  
-  reg[[i]] <-   lm(income ~ educ, data=df_sample) %>% 
-                tidy(conf.int = TRUE) %>%
-                filter(term=="educ") %>%
-                select(-term)
-  
- 
-  
-  
+sample_and_regress <- function(df, n_sample) {
+  df_sample <- df[sample(nrow(df), n_sample, replace = FALSE), ]  
+  lm(income ~ educ, data = df_sample) %>%
+    tidy(conf.int = TRUE) %>%
+    filter(term == "educ") %>%
+    select(-term)
 }
-reg <- bind_rows(reg) %>%
-            rownames_to_column(var = "reg")
 
 
-reg_1 <- list()
-for (i in (1:1000)) {
+reg <- map_dfr(1:n_iterations, ~ sample_and_regress(df, n_sample), .id = "reg")
 
-  
-  df_sample <- df_1[sample(nrow(df_1), n_sample),]
-  
-  reg_1[[i]] <-   lm(income ~ educ, data=df_sample) %>% 
-                tidy(conf.int = TRUE) %>%
-                filter(term=="educ") %>%
-                select(-term)
-  
- 
-  
-  
-}
-reg_1 <- bind_rows(reg_1) %>%
-            rownames_to_column(var = "reg")
+
+reg_1 <- map_dfr(1:n_iterations, ~ sample_and_regress(df_1, n_sample), .id = "reg")
 
 
 ```
@@ -287,6 +267,238 @@ grid.arrange(p1, p2, ncol = 2)
 ```
 
 Se observa que cuando se cumple el supuesto de exogeneidad, el parámetro poblacional ($\alpha$) que representa el efecto de la educación sobre los ingresos se encuentra dentro del intervalo de confianza en el 95% de las estimaciones. Por otra parte, cuando violamos este supuesto en ningún caso se logra una estimación en la que el verdadero parámetro poblacional esté dentro del intervalo de confianza.
+
+
+
+
+
+
+## Variables de control
+
+```{r}
+df_2 <- tibble(
+  educ = rnorm(N, mean = 11, sd = 9),
+  u = rnorm(N, mean = 0, sd = 36),
+  effect_educ = 10,   
+  effect_educa_padre = 11,  
+  income = income_aut + effect_educ * educ + u
+) %>%
+  mutate(
+    niv_educ = case_when(
+      educ <= 5 ~ 0,
+      educ > 5 & educ <= 9 ~ 5,
+      educ > 9 & educ <= 11 ~ 9,
+      educ > 11 & educ <= 16 ~ 11,
+      educ > 16 & educ <= 18 ~ 16,
+      educ > 18 & educ <= 20 ~ 18,
+      educ > 20 ~ 20
+    ),
+    educa_padre_base = rnorm(N, mean = 12, sd = 9),  
+    educa_padre = pmax(educa_padre_base, educ),      
+    niv_educa_padre = case_when(  
+      educa_padre <= 5 ~ 0,
+      educa_padre > 5 & educa_padre <= 9 ~ 5,
+      educa_padre > 9 & educa_padre <= 11 ~ 9,
+      educa_padre > 11 & educa_padre <= 16 ~ 11,
+      educa_padre > 16 & educa_padre <= 18 ~ 16,
+      educa_padre > 18 & educa_padre <= 20 ~ 18,
+      educa_padre > 20 ~ 20
+    ),
+    income = income_aut + effect * educ + effect_educa_padre * educa_padre + u  
+  )
+
+```
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+p1 <- ggplot(df) + 
+  geom_histogram(aes(income), bins = 100, color = "white", fill = "green", alpha = 0.5) + 
+  geom_histogram(aes(educ), bins = 100, color = "white", fill = "orange", alpha = 0.5) +
+  geom_histogram(aes(u), bins = 100, color="white", fill="blue", alpha=0.5)+
+  theme_economist_white() +
+  ggtitle("Distribución de Variables sin correlacion") +
+  labs(x = "Valores de las Variables", y = "Frecuencia") + 
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5),  
+    axis.title.x = element_text(face = "bold"),  
+    axis.title.y = element_text(face = "bold")
+  )
+
+
+p2 <- ggplot(df_2) + 
+  geom_histogram(aes(income), bins = 100, color = "white", fill = "green", alpha = 0.5) + 
+  geom_histogram(aes(educ), bins = 100, color = "white", fill = "orange", alpha = 0.5) +
+  geom_histogram(aes(educa_padre), bins = 100, color="white", fill="red", alpha=0.5)+
+  geom_histogram(aes(u), bins = 100, color="white", fill="blue", alpha=0.5)+
+  theme_economist_white() +
+  ggtitle("Distribución de Variables con correlacion") +
+  labs(x = "Valores de las Variables", y = "Frecuencia") + 
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5),  
+    axis.title.x = element_text(face = "bold"),  
+    axis.title.y = element_text(face = "bold")
+  )
+
+
+grid.arrange(p1, p2, ncol = 2)
+```
+```{r}
+
+p1 <- ggplot(df, aes(x = income, y = niv_educ, group = niv_educ)) +
+  geom_density_ridges(alpha = 0.3) +
+  geom_function(fun = function(x) (-income_aut/effect) + (1/effect)*x, xlim = c(100, 400), color = "orange") +
+  coord_flip() +
+  theme_economist_white() +
+  ggtitle("Distribución de Income por Nivel Educativo (df)") + 
+  labs(x = "Income", y = "Nivel Educativo") +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    axis.title.x = element_text(face = "bold"),
+    axis.title.y = element_text(face = "bold")
+  )
+
+
+p2 <- ggplot(df_2, aes(x = income, y = niv_educ, group = niv_educ)) +
+  geom_density_ridges(alpha = 0.3) +
+  geom_function(fun = function(x) (-income_aut/effect) + (1/effect)*x, xlim = c(100, 400), color = "orange") +
+  coord_flip() +
+  theme_economist_white() +
+  ggtitle("Distribución de Income por Nivel Educativo (df_1)") + 
+  labs(x = "Income", y = "Nivel Educativo") +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    axis.title.x = element_text(face = "bold"),
+    axis.title.y = element_text(face = "bold")
+  )
+
+
+grid.arrange(p1, p2, ncol = 2)
+
+```
+
+
+
+
+```{r}
+n_sample = 10000
+n_iterations = 1000
+
+
+sample_and_regress <- function(df, formula, n_sample) {
+  df_sample <- df[sample(nrow(df), n_sample, replace = FALSE), ]  
+  lm(formula, data = df_sample) %>%
+    tidy(conf.int = TRUE) %>%
+    filter(term == "educ") %>%
+    select(-term)
+}
+
+
+reg <- map_dfr(1:n_iterations, ~ sample_and_regress(df_2, income ~ educ, n_sample), .id = "reg")
+
+
+reg_2 <- map_dfr(1:n_iterations, ~ sample_and_regress(df_2, income ~ educ + educa_padre, n_sample), .id = "reg")
+```
+
+
+
+
+
+```{r}
+
+media_df <- mean(reg$estimate, na.rm = TRUE)
+media_df2 <- mean(reg_2$estimate, na.rm = TRUE)
+
+
+p1 <- ggplot(reg, aes(estimate)) + 
+  geom_histogram(color = "white", bins = 100, alpha = 0.5) + 
+  geom_vline(aes(xintercept = media_df), color = "red", linetype = "dashed") +
+  theme_economist_white() +
+  ggtitle("Distribución de Estimates (reg)") +
+  theme(plot.title = element_text(face = "bold", hjust = 0.5))
+
+
+p2 <- ggplot(reg_2, aes(estimate)) + 
+  geom_histogram(color = "white", bins = 100, alpha = 0.5) + 
+  geom_vline(aes(xintercept = media_df2), color = "red", linetype = "dashed") +
+  theme_economist_white() +
+  ggtitle("Distribución de Estimates (df1)") +
+  theme(plot.title = element_text(face = "bold", hjust = 0.5))
+
+
+
+grid.arrange(p1, p2, ncol = 2)
+
+```
+
+
+```{r}
+df_h0 <- reg %>% 
+         select(estimate, conf.low, conf.high, reg)  %>%
+         mutate(h0=10,
+               rechaza_h0=ifelse(conf.low < h0 &  h0 < conf.high , "No", "Si")) %>%
+             arrange(estimate) %>%
+             mutate(reg=c(1:nrow(.)))
+
+df_h0_1 <- reg_2%>% 
+  select(estimate, conf.low, conf.high, reg)  %>%
+  mutate(h0 = 10,
+         rechaza_h0 = ifelse(conf.low < h0 & h0 < conf.high, "No", "Si")) %>%
+  arrange(estimate) %>%
+  mutate(reg = c(1:nrow(.)))
+
+
+p1 <- ggplot(df_h0, aes(x = reg)) +
+  geom_linerange(aes(ymin = conf.low, ymax = conf.high, color = rechaza_h0), lwd = 0.1) + 
+  scale_color_manual(values = c("No"= "#999999","Si" = "#ef8a62")) +
+  geom_point(aes(y = estimate), size = 0.1) + 
+  geom_hline(aes(yintercept = h0), color = "red", linetype = "dashed") +
+  labs(y = "coef", x = "reg") +
+  theme_economist_white() +
+  ggtitle("Distribución de Coeficientes (reg)") +
+  theme(plot.title = element_text(face = "bold", hjust = 0.5))
+
+
+p2 <- ggplot(df_h0_1, aes(x = reg)) +
+  geom_linerange(aes(ymin = conf.low, ymax = conf.high, color = rechaza_h0), lwd = 0.1) + 
+  scale_color_manual(values = c("No"= "#999999","Si" = "#ef8a62")) +
+  geom_point(aes(y = estimate), size = 0.1) + 
+  geom_hline(aes(yintercept = h0), color = "red", linetype = "dashed") +
+  labs(y = "coef", x = "reg") +
+  theme_economist_white() +
+  ggtitle("Distribución de Coeficientes (reg_1)") +
+  theme(plot.title = element_text(face = "bold", hjust = 0.5))
+
+
+
+grid.arrange(p1, p2, ncol = 2)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Conclusion
 
