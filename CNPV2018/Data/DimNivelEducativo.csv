@@ -1,0 +1,13 @@
+﻿skNivelEducativo;Nivel_educativo;Años_educación;Años_acumulados
+1;Preescolar;1;1
+2;Básica primaria;5;6
+3;Básica secundaria;4;10
+4;Media academica o clasica;2;12
+5;Media tecnica;2;12
+6;Normalista;2;14
+7;Técnica profesional o Tecnológica;2;14
+8;Universitario;5;17
+9;Especialización, maestría, doctorado;2;19
+10;Ninguno;0;0
+12;No Aplica;0;0
+99;No Informa;0;0
