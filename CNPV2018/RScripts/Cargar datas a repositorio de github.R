@@ -17,6 +17,9 @@ Viviendas<-Viviendas %>% filter(U_DPTO=="05" & U_MPIO=="001")
 Hogares<-Hogares %>% filter(U_DPTO=="05" & U_MPIO=="001")
 MGN<-MGN %>% filter(U_DPTO=="05" & U_MPIO=="001")
 
+#Cargar la data de vivienda VIS
+load("C:/Users/HP-Laptop/OneDrive - Universidad de Antioquia/Maestría en Economía/Evaluación de impacto/Inferencia-Causal/CNPV2018/Data/vis_iv.RData")
+
 #Exportar en formato csv
 path<-"C:/Users/HP-Laptop/OneDrive - Universidad de Antioquia/Maestría en Economía/Evaluación de impacto/Inferencia-Causal/CNPV2018/Data"
 
@@ -59,3 +62,7 @@ save_data(data = MGN,
           length_chunk = 100000,
           name_file =paste0(path,
                             "/CNPV2018_MGN_A2_05001/CNPV2018_MGN_A2_05001_%03d.csv"))
+
+save_data(data = vis_iv,
+          length_chunk = 11201,
+          name_file =paste0(path,"/vis_iv.csv"))
