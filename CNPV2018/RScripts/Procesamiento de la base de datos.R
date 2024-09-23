@@ -180,7 +180,6 @@ group_by(COD_MANZANA) %>%
   )
 
 #Unir variables
-
 ManzanasConsolidado<-variablesPersonas %>% 
   left_join(variablesHogares,by = "COD_MANZANA") %>% 
   left_join(variablesViviendas, by = "COD_MANZANA")
