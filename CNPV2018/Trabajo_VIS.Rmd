@@ -1,0 +1,38 @@
+---
+title: "ensayo_inferencia"
+output: html_document
+date: "2024-09-25"
+---
+# Ejercicio Variables instrumentales Inferencia Causal
+# William Aguirre, John Esteban Londoño & Wilmer Rojas Zuleta
+# Maestría en Economía
+
+#Definicion de modelo
+Especificación general del modelo regresión
+variable de tratamiento: treat vis/dis
+vector de covariables
+definir casos #3 
+Variables dependientes: valor promedio metro cuadrado, tasa de desempleo, número de robos
+Variables independientes:
+
+
+Justificacion covariables
+Análisis descriptivo un solo cuadro que relacione las variables
+
+Resultados
+
+# Willi valor promedio metro cuadrad
+# Johnes tasa desempleo
+# Wilm número de robos
+
+Recomendaciones de política
+
+```{r}
+source("https://raw.githubusercontent.com/Esteban7777/Inferencia-Causal/refs/heads/main/CNPV2018/RScripts/Procesamiento%20de%20la%20base%20de%20datos.R")
+```
+
+```{r}
+
+```
+
+## 
