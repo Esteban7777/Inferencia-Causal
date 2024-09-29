@@ -1,0 +1,120 @@
+---
+title: "Untitled"
+author: "William Alexander Aguirre A"
+date: "2024-09-29"
+output: html_document
+---
+
+## Estrategia de identificación
+
+Para estimar el efecto que tiene la construcción de vivenda de interés social sobre diferentes variables del vecindario se utiliza como variable de tratamiento el ídice de accesibilidad de Hansen. Dado que las variables sobre las que se realizará la evaluación de impacto (criminalidad, desempleo y precio del metro cuadrado) tienen endogeneidad con respecto a este indice es necesario encontrar un método de estimación que permite identificar el verdadero efecto de este programa evitando el sesgo de selección generado por esta endogeneidad. La relación de causalidad que se desea estimar se puede expresar de la siguiente forma.
+
+$$
+Y_k= \beta_{1k}+\beta_{2k} Treat +u
+$$
+
+Donde $$k=Criminalidad, Desempleo, Precio M2$$
+
+$$Treat=\sum_{s=1}^S\frac{vis_s}{d_{is}}$$ $\beta_2$ es el impacto que tiene el tratamiento sobre la variable de respuesta y $u$ es el termino de error.
+
+Para reducir el sesgo de selección en observables se introduce también un conjunto de variables de control. La selección de estas variables se detalla en la sección dedicada a la estimación de cada uno de los impactos. De otra parte, para controlar el sesgo de selección en no observables se decide utilizar una estrategia de variables instrumentales.
+
+Se propone la calidad geológica del terreno al rededor de cada manzana como instrumento para realizar la estimación. Se debe recordar que la variable instrumental debe cumplir dos propiedades, por un lado debe estár fuertemente correlacionada con la variable de tratamiento y por otro debe ser independiente del termino de error. Esto quiere decir que el efecto que tiene la variable instrumental se da unica y exclusivamente a traves del efecto que tiene sobre la variable de tratamiento.
+
+En este caso la calidad geológica del suelo esta fuertemente asociada con la construcción de viviendas VIS dado que estas edificaciones necesitan unas caracteristicas del suelo que permitan una construcción segura y estable. De otra parte, esta caracteristica geológica al estar dada previamente por la naturaleza no se encuentra correlacionada con niguna variable no observable que tenga alguna relación con la criminalidad, el desempleo o el precio del metro cuadrado.
+
+Para la estimación se utiliza el método de minimos cuadrados en dos etapas, donde la primera etapa estima el siguiente modelo:
+
+$$ \hat {Treat}= \alpha_{1k}+\alpha_{2k} VI + \alpha_{3k}X_k+v $$
+
+Y en la seguiunda etapa se estima:
+
+$$ \hat{Y_k}= \beta_{1k}+\beta_{2k} \hat{Treat} + \beta_{3k}X_k+u $$
+
+Donde $VI$ es la variable instrumental (calidad geológica del suelo), $X_k$ son las variables de control en el modelo de la variable de respuesta $k$ . Finalmente, para la estimación se excluye de la muestra aquellas manzanas en las que hubo proyectos VIS con el objetivo de evaluar unicamente los efectos indirectos sobre el vecindario y no sobre las propias viviendas VIS, y se excluyen aquellas manzanas que tiene una distancia superior a 400 metros de un proyecto VIS, dado que en manzanas tan alejadas del proyecto no estan expuestas al tratamiento.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+source("https://raw.githubusercontent.com/Esteban7777/Inferencia-Causal/refs/heads/main/CNPV2018/RScripts/Procesamiento%20de%20la%20base%20de%20datos.R")
+
+library(ivreg)
+```
+
+## Efecto sobre el valor promedio del metro cuadrado
+
+### Justificación de covariables
+
+En esta sección se estima el efecto de los proyectos de vivienda de interés social sobre el valor promedio del metro cuadrado, para ello es importante reducir al mínimo el sesgo de selección mediante la inclusión de variables observables que estén relacionadas con el precio de la vivienda urbana de manera que se pueda obtener un estimador insesgado de este efecto. Se realiza una selección de las covariables incluidas en el modelo a partir de la disponibilidad de información en el set de datos utilizado para este estudio, definiendo a partir de una revisión de literatura aquellas variables que se ha encontrado que tienen relación con el valor promedio del metro cuadrado.
+
+El modelo de rentas urbanas es una aproximación de la economía urbana al problema del precio de la vivienda que establece como la distancia al centro de la ciudad determina la renta del suelo, tanto por los costos de transporte y acceso a actividades económicas, como por la escasez de tierra que se produce en el centro de las ciudades compactas (Alonso, 1964). Teniendo en cuenta esto, se deben incluir como variables de control en el modelo la distancia a medios de transporte y vías, así como el acceso a trabajo, estudio y salud.
+
+Uno de los principales determinantes del precio del metro cuadrado en las zonas urbanas es la calidad de las viviendas construidas y el suelo sobre el que está ubicado el vecindario. Esta precariedad se asocia con la informalidad de la vivienda, lo que a su vez está correlacionado con la informalidad en otros ámbitos como el mercado laboral (García, Badillo, & Aristrizábal, 2024). En este sentido, es importante incluir dentro de las variables de control aquellas permiten capturar la deficiencia en materiales de construcción y la inestabilidad del suelo para ser habitable,  como forma de aproximación a la informalidad de la vivienda en el vecindario, así mismo, se incluyen variables de mercado laboral como forma de capturar el efecto de este mercado sobre el precio del metro cuadrado dada la correlación que existe entre mercado laboral y vivienda encontrado en la ciudad de Medellín por García, Badillo, & Aristrizábal (2024).
+
+Los cambios demográficos de las ciudades también impactan el mercado de vivienda, Finney (2024) estima los cambios en la demanda de vivienda producidos por la migración en los Estados Unidos y la manera como estos cambios podrían estar cambiando la estructura de las áreas urbanas en ese país. Por esta razón es necesario controlar la migración incluyendo estas variables dentro del modelo a estimar. Estos cambios demográficos también pueden contemplar procesos de gentrificación en el que los que el ingreso y el nivel educativo pueden afectar el valor de la vivienda (Cole, Mehdipanah, Gullón, & Triguero, 2021). En este sentido, se incluyen variables de control como el nivel educativo promedio de las personas que viven en la manzana, el estrato y el índice de pobreza multidimensional.
+
+La economía del crimen tiene un amplio conjunto de estudios acerca del efecto que tiene la actividad criminal sobre el precio de la vivienda. Boggess, Greenbaum & Tita (2013) llegan a la conclusión de que el crimen conduce el precio de la vivienda en el contexto de Los Ángeles, generando mayor cantidad de transacciones de viviendas en los barrios con mayor nivel de crimen; Vetter, Beltrao, & Meseena (2013) estiman el impacto de la sensación de seguridad sobre el precio de las viviendas residenciales en las áreas metropolitanas de Brasil, encontrando también que los hogares de mayores ingresos sienten una mayor sensación de seguridad en sus viviendas lo que valoriza las propiedades. En este sentido, se decide incluir indicadores de seguridad como el número de robos dentro de las variables de control para capturar el efecto de la criminalidad sobre el precio del metro cuadrado en la ciudad.
+
+### Analisis descriptivo de las variables
+
+```{r}
+vis_iv<- vis_iv %>% 
+  filter(proyectos_en_mzn==0 & proyectos_a_400m==1)
+```
+
+### Resultados de la estimación
+
+Para realizar la estimación construimos un vector de variables de control y especificamos el modelo indicando que el logarito del precio del metro cuadrado está en función de la variable de tratamiento y estos controles. Adicionalmente se indica en la fución que la variable instrumental utilizada será `iv_vis`.
+
+```{r}
+#Se definen las variables de control
+control<-c(
+  #Seguridad
+  "n_robos","robo_per",
+  #Indicadores sociales
+  "ipm","HogaresHacinados","EstratoPromedio",
+  #Cambios demográficos
+  "PorcentajeMigrantesInternacionales",
+  "PorcentajeMigrantesIntermunicipales",
+  #Mercado laboral           
+  "dependencia","Desempleados",
+  #Precariedad de las viviendas y el vecindario
+  "CAT_Pendiente_Escarpado","CAT_EstadoVia_Malo",
+  "aptitud_en_mzn","PorcentajeParedesPrecarias",
+  "PorcentajePisosPrecarios",
+  "PorcentajePrecariedadAcueducto",
+  "PorcentajePrecariedadAlcantarillado",
+  #Acceso a servicios y economia
+  "access_trabajo","access_estudio","access_salud",
+  "dist_trans","dist_vias")
+
+modelo <- ivreg(
+  formula = as.formula(
+    paste0("log(valor_m2) ~ ", paste(control, collapse = "+"),
+           " + log(treat_vis) | ",
+           paste(control, collapse = "+"), 
+           " + iv_vis")),  
+  data = vis_iv)
+```
+
+```{r}
+library(sjPlot)
+tab_model(modelo, show.ci = FALSE, show.se = TRUE, show.p = TRUE, 
+          digits = 3)
+```
+
+Los resultados de la estimación arrojan un efecto significativo del indice de accesibilidad a la ubicación de los proyectos VIS sobre el precio promedio del metro cuadrado. Esto se puede interpretar como un impacto de los proyectos VIS sobre la valorización del vecindario. Este impacto es positivo, mostrando que por cada punto porcentual que aumenta el indice de accesibilidad de Hansen, el precio promedio del metro cuadrado se incrementa en 1.3 puntos porcentuales.
+
+```{r}
+test_instrumento<-as.data.frame(
+  summary(modelo,diagnostics=TRUE)$diagnostics)
+test_instrumento[1:2,3:4]
+```
+
+El test de instrumentos debiles permite rechazar la hipotesis nula de debilidad en el instrumento, por lo que la relación entre la variable instrumental y la variable de tratamiento es lo suficientemente fuerte para generar una estimación confiable. De otra parte el resultado test de Wu-Hausman permite confirmar la endogeneidad que existe entre el tratamiento y el precio del metro cuadrado, razón por la cual esta estimación por variables instrumentales ofrece un parámetro menos sesgado que OLS.
+
+### Recomendaciones de política
+
+El impacto que tienen los proyectos de vivienda de interés social sobre el vecindario se entienden como una externalidad positiva en el vecindario que aumenta el valor de la vivienda en los lugares cercanos a la ubicación de dichos proyectos. Esta valorización no solo impacta positivamente a los dueños de inmuebles cercanos a los proyectos VIS, también se puede traducir en el largo plazo en un mayor recaudo para el Estado por la via del impuesto predial, lo que genera una recuperación de la inversión destinada a estos proyectos.
