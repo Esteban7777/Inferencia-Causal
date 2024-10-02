@@ -1,0 +1,321 @@
+---
+title: "Efectos de la vivienda VIS sobre el mercado laboral, el precio de la vivienda y la seguridad"
+author: "William Aguirre, John Esteban Londoño & Wilmer Rojas"
+date: "2024-09-29"
+output:
+  word_document: default
+  html_document: default
+---
+
+# Estrategia de identificación
+
+Para estimar el efecto que tiene la construcción de vivenda de interés social sobre diferentes variables del vecindario se utiliza como variable de tratamiento el índice de accesibilidad de Hansen. Dado que las variables sobre las que se realizará la evaluación de impacto (criminalidad, desempleo y precio del metro cuadrado) tienen endogeneidad con respecto a este indice es necesario encontrar un método de estimación que permite identificar el verdadero efecto de este programa evitando el sesgo de selección generado por esta endogeneidad. La relación de causalidad que se desea estimar se puede expresar de la siguiente forma.
+
+$$
+Y_k= \beta_{1k}+\beta_{2k} Treat +u
+$$
+
+Donde $$k=Criminalidad, Desempleo, Precio M2$$
+
+$$Treat=\sum_{s=1}^S\frac{vis_s}{d_{is}}$$ $\beta_2$ es el impacto que tiene el tratamiento sobre la variable de respuesta y $u$ es el termino de error.
+
+Para reducir el sesgo de selección en observables se introduce también un conjunto de variables de control. La selección de estas variables se detalla en la sección dedicada a la estimación de cada uno de los impactos. De otra parte, para controlar el sesgo de selección en no observables se decide utilizar una estrategia de variables instrumentales.
+
+Se propone la calidad geológica del terreno al rededor de cada manzana como instrumento para realizar la estimación. Se debe recordar que la variable instrumental debe cumplir dos propiedades, por un lado debe estár fuertemente correlacionada con la variable de tratamiento y por otro debe ser independiente del termino de error. Esto quiere decir que el efecto que tiene la variable instrumental se da unica y exclusivamente a traves del efecto que tiene sobre la variable de tratamiento.
+
+En este caso la calidad geológica del suelo esta fuertemente asociada con la construcción de viviendas VIS dado que estas edificaciones necesitan unas caracteristicas del suelo que permitan una construcción segura y estable. De otra parte, esta caracteristica geológica al estar dada previamente por la naturaleza no se encuentra correlacionada con niguna variable no observable que tenga alguna relación con la criminalidad, el desempleo o el precio del metro cuadrado.
+
+Para la estimación se utiliza el método de minimos cuadrados en dos etapas, donde la primera etapa estima el siguiente modelo:
+
+$$ \hat {Treat}= \alpha_{1k}+\alpha_{2k} VI + \alpha_{3k}X_k+v $$
+
+Y en la seguiunda etapa se estima:
+
+$$ \hat{Y_k}= \beta_{1k}+\beta_{2k} \hat{Treat} + \beta_{3k}X_k+u $$
+
+Donde $VI$ es la variable instrumental (calidad geológica del suelo), $X_k$ son las variables de control en el modelo de la variable de respuesta $k$ . Finalmente, para la estimación se excluye de la muestra aquellas manzanas en las que hubo proyectos VIS con el objetivo de evaluar unicamente los efectos indirectos sobre el vecindario y no sobre las propias viviendas VIS, y se excluyen aquellas manzanas que tiene una distancia superior a 400 metros de un proyecto VIS, dado que en manzanas tan alejadas del proyecto no estan expuestas al tratamiento.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+source("https://raw.githubusercontent.com/Esteban7777/Inferencia-Causal/refs/heads/main/CNPV2018/RScripts/Procesamiento%20de%20la%20base%20de%20datos.R")
+
+library(ivreg)
+
+vis_iv<- vis_iv %>% 
+  filter(proyectos_en_mzn==0 & proyectos_a_400m==1)
+```
+
+## Efecto sobre la tasa de desempleo
+
+El desempleo es un fenómeno multifactorial, y las variables seleccionadas permiten analizarlo desde diferentes ángulos. **La educación promedio** tiene una relación inversa con el desempleo, ya que un mayor nivel educativo generalmente mejora la empleabilidad al aumentar las habilidades y la competitividad laboral (Card, 1999). **El estrato socioeconómico** influye en el acceso a oportunidades laborales, ya que las personas en estratos más altos suelen tener mejores redes y acceso a empleos de calidad (Bourguignon, 2003). **La cantidad de viviendas** refleja la densidad poblacional y puede asociarse con la demanda de empleo en áreas más urbanizadas. **La precariedad promedio**, que mide las condiciones de trabajo inestables o informales, puede estar directamente relacionada con el desempleo estructural, al evidenciar una mayor fragilidad en el mercado laboral (Fields, 2011). **El Índice de Pobreza Multidimensional (IPM)** es un indicador integral de la pobreza que incluye factores como educación, salud y condiciones de vida, esenciales para comprender las limitaciones que enfrentan las personas en situación de pobreza para acceder a empleos formales (Alkire & Foster, 2011).
+
+Adicionalmente, variables relacionadas con la infraestructura y la movilidad influyen en el desempleo. **Accesso al trabajo, estudio y salud** (access_trabajo, access_estudio, access_salud) son cruciales, ya que una mejor conectividad y acceso a servicios básicos impacta directamente la capacidad de las personas para participar en el mercado laboral (Glaeser, 2010). El **estado de las vías cercanas al hogar** (CAT_EstadoVia_Malo) y las **distancias a vías y medios de transporte** (dist_vias, dist_trans) también son factores determinantes: una infraestructura vial en mal estado o distancias largas a medios de transporte limitan las oportunidades laborales al aumentar los costos de desplazamiento, lo que puede disuadir la búsqueda activa de empleo (Duranton & Turner, 2011). Estas variables complementan el análisis socioeconómico y permiten una comprensión más profunda del desempleo desde una perspectiva estructural y geográfica.
+
+```{r}
+desempleo <-vis_iv %>%
+  select(EducacionPromedio,TasaDesempleo,CantidadViviendas,EstratoPromedio,CantidadViviendas,PrecariedadPromedio,iv_vis,ipm,treat_vis,access_trabajo,access_estudio,access_salud,CAT_EstadoVia_Malo,dist_trans,dist_vias)
+
+```
+
+### Análisis descriptiva
+
+```{r}
+summary(desempleo)
+```
+
+Las estadísticas descriptivas muestran una alta variabilidad en las variables analizadas. El número de desempleados oscila entre 0 y 191, mientras que los ocupados varían entre 0 y 2972, lo que refleja una amplia dispersión en los niveles de empleo. La tasa de desempleo promedio es de 10.93%, con un rango de 0 a 100%, sugiriendo casos extremos. En cuanto a la educación, el promedio es de 10.4 años, pero con una variabilidad significativa (mínimo 1.2, máximo 17.4). La cantidad de viviendas también presenta un amplio rango, de 4 a 2429, mientras que el estrato socioeconómico promedio es de 2.22, lo que indica que las observaciones provienen principalmente de áreas de estratos bajos. Finalmente, la precariedad promedio es del 26.93%, con un máximo del 395%, lo que sugiere condiciones de vida extremadamente diversas y, en algunos casos, muy desfavorables. Esto resalta la heterogeneidad de los datos y las posibles disparidades entre las diferentes áreas analizadas.
+
+```{r}
+cor(desempleo %>% select(-iv_vis))
+```
+
+Existe una correlación negativa moderada con la educación promedio (-0.35), lo que sugiere que a mayor nivel educativo, la tasa de desempleo tiende a ser menor. La cantidad de viviendas tiene una correlación débil y negativa (-0.09) con la tasa de desempleo, lo que indica una relación poco significativa entre estas variables. El estrato promedio también está negativamente correlacionado (-0.33), lo que implica que en zonas con mayor estrato socioeconómico, la tasa de desempleo tiende a ser más baja. Por último, la precariedad promedio tiene una correlación positiva (0.26) con la tasa de desempleo, lo que indica que en áreas con mayor precariedad, la tasa de desempleo es más alta.
+
+### Resultados de la estimación
+
+```{r}
+iv_model <- ivreg(TasaDesempleo ~ EducacionPromedio + CantidadViviendas + EstratoPromedio + PrecariedadPromedio + ipm + access_trabajo + log(treat_vis) + access_salud + CAT_EstadoVia_Malo + dist_trans + dist_vias |
+                  EducacionPromedio + CantidadViviendas + EstratoPromedio + PrecariedadPromedio + ipm + access_trabajo + access_salud + CAT_EstadoVia_Malo + dist_trans + dist_vias + iv_vis,
+                  data = desempleo)
+
+```
+
+No podemos afirmar que existe un impacto significativo de la variable de tratamiento **VIS** sobre la **Tasa de Desempleo**, ya que, de manera individual, el parámetro asociado no resulta estadísticamente significativo. Esto implica que, en términos de reducción del desempleo, la variable VIS no tiene un efecto directo o relevante en el modelo. En cambio, los resultados sugieren que las políticas más efectivas para disminuir el desempleo son aquellas enfocadas en la educación y la formación para el trabajo. Estas intervenciones mejoran las habilidades y competencias de la fuerza laboral, lo que aumenta su competitividad en el mercado laboral y, en consecuencia, contribuye a una mayor empleabilidad y reducción del desempleo.
+
+```{r}
+test_instrumento<-as.data.frame(
+  summary(iv_model,diagnostics=TRUE)$diagnostics)
+test_instrumento[1:2,3:4]
+```
+
+Los resultados del modelo de variables instrumentales indican que no hay evidencia de que el instrumento utilizado (**`iv_vis`**) sea débil, con un estadístico de 4.49 y un p-valor de 0.034, lo que sugiere que está adecuadamente correlacionado con la variable endógena **`log(treat_vis)`**. Por otro lado, la prueba de Wu-Hausman (estadístico de 1.10 y p-valor de 0.294) no rechaza la hipótesis nula de exogeneidad, lo que indica que no se encontró evidencia significativa de endogeneidad en el modelo. En conjunto, estos resultados sugieren que, si bien el instrumento es válido, no se requiere necesariamente el uso de variables instrumentales, ya que la endogeneidad no parece ser un problema sustancial en este caso.
+
+## Efecto sobre el número de robos
+
+A continuación, se estima el efecto de la vivienda VIS sobre el número de robos. El número de robos depende de múltiples factores (Cao & Maume, 1993). A nivel macroeconómico, el PIB per cápita y los niveles de desempleo se asocian con mayor criminalidad. A nivel microeconómico, el nivel educativo, la heterogeneidad del vecindario (número de migrantes, etnia), la correlación espacial entre vecindarios con alta criminalidad, así como las características del vecindario y la vivienda (precariedad, estrato socioeconómico, establecimiento de comercio, vías, precio de la vivienda entre otros) y el control público (ej. estaciones de policía) son determinantes del número de robos. Por otro lado, los lugares con mayores tasas de robo inducen la hacía lugares con baja criminalidad (Boggess & Hipp, 2010) Existe una relación demostrada entre el número de robos y el desarrollo de vivienda. Por ejemplo, en Chicago y los Ángeles, se encontró que existe una correlación entre la disminución de la criminalidad en el año previo y el aumento en licencias de construcción (Lacoe et al., 2018). Asimismo, una mayor urbanización conlleva a disminución de la criminalidad. Por lo que se puede intuir que lugares con menor tasa de robos, sean más atractivos para el desarrollo de vivienda, esto puede generar endogeneidad, por tal motivo es pertinente realizar esta estimación a través de variables instrumentales. Se escogió como instrumento, la calidad geológica del suelo, algo que esta correlacionado con el desarrollo de la vivienda vis, pero no con el número de robos.
+
+### Analisis descriptivo de las variables
+
+```{r}
+summary(vis_iv$n_robos)
+
+#Se definen las variables de control
+control<-c(
+  #Indicadores sociales
+  "ipm","HogaresHacinados","EstratoPromedio",
+  #Cambios demográficos
+  "PorcentajeMigrantesInternacionales",
+  "PorcentajeMigrantesIntermunicipales",
+  #Mercado laboral           
+  "dependencia","Desempleados",
+  #Precariedad de las viviendas y el vecindario
+  "PrecariedadPromedio",
+  "CAT_Pendiente_Escarpado","CAT_EstadoVia_Malo",
+  "aptitud_en_mzn","PorcentajeParedesPrecarias",
+  "PorcentajePisosPrecarios",
+  "PorcentajePrecariedadAcueducto",
+  "PorcentajePrecariedadAlcantarillado",
+  #Acceso a servicios y economia
+  "access_trabajo","access_estudio","access_salud",
+  "dist_trans","dist_vias") 
+vis_iv %>% select(n_robos,control)  %>% cor() %>% as.data.frame()
+```
+
+Se identifica que los controles usados no tienen una correlación fuerte con el número de robos. Las variables de acceso (trabajo y salud) son las que presentan correlación positiva, pero de baja magnitud. Es decir entre mayor sea la accesibilidad al empleo, educación y la salud, mayor número de robos. lo que en principio parece un resultado contraintuitivo.
+
+### Resultados de la estimación
+
+Para realizar la estimación construimos un vector de variables de control y especificamos el modelo indicando que el logaritmo del número robos está en función de la variable de tratamiento y estos controles. Adicionalmente se indica en la función que la variable instrumental utilizada será `iv_vis`.
+
+```{r}
+
+
+modelo <- ivreg(
+  formula = as.formula(
+    paste0("log(n_robos+1) ~ ", paste(control, collapse = "+"),
+           " + log(treat_vis) | ",
+           paste(control, collapse = "+"), 
+           " + iv_vis")),  
+  data = vis_iv)
+```
+
+```{r}
+library(sjPlot)
+tab_model(modelo, show.ci = FALSE, show.se = TRUE, show.p = TRUE, 
+          digits = 3)
+```
+
+El impacto de la variable de tratamiento VIS (a través del indice de Hansen) sobre el número de robos es negativo, es decir, por cada incremento del 1 punto porcentual n el indice de hansen se reduce en 2.7 puntos porcentuales el número de robos, este hallazgo tiene una significancia al 10%. Indicando que entre mas cerca se encuentre un proyecto VIS de una manzana se traduce en una disminucion en el número de robos.
+
+```{r}
+test_instrumento<-as.data.frame(
+  summary(modelo,diagnostics=TRUE)$diagnostics)
+test_instrumento[1:2,3:4]
+```
+
+El test de instrumentos debiles es significativo por lo que permite rechazar la hipotesis nula de debilidad en el instrumento. En cuanto al test de Wu-Hausman, permite confirmar la endogeneidad que existe entre el tratamiento y el número de robos, razón por la cual el realizar la estimación a través del método de variables instrumentales ofrece un parámetro menos sesgado que OLS.
+
+## Efecto sobre el valor promedio del metro cuadrado
+
+### Justificación de covariables
+
+En esta sección se estima el efecto de los proyectos de vivienda de interés social sobre el valor promedio del metro cuadrado, para ello es importante reducir al mínimo el sesgo de selección mediante la inclusión de variables observables que estén relacionadas con el precio de la vivienda urbana de manera que se pueda obtener un estimador insesgado de este efecto. Se realiza una selección de las covariables incluidas en el modelo a partir de la disponibilidad de información en el set de datos utilizado para este estudio, definiendo a partir de una revisión de literatura aquellas variables que se ha encontrado que tienen relación con el valor promedio del metro cuadrado.
+
+El modelo de rentas urbanas es una aproximación de la economía urbana al problema del precio de la vivienda que establece como la distancia al centro de la ciudad determina la renta del suelo, tanto por los costos de transporte y acceso a actividades económicas, como por la escasez de tierra que se produce en el centro de las ciudades compactas (Alonso, 1964). Teniendo en cuenta esto, se deben incluir como variables de control en el modelo la distancia a medios de transporte y vías, así como el acceso a trabajo, estudio y salud.
+
+Uno de los principales determinantes del precio del metro cuadrado en las zonas urbanas es la calidad de las viviendas construidas y el suelo sobre el que está ubicado el vecindario. Esta precariedad se asocia con la informalidad de la vivienda, lo que a su vez está correlacionado con la informalidad en otros ámbitos como el mercado laboral (García, Badillo, & Aristrizábal, 2024). En este sentido, es importante incluir dentro de las variables de control aquellas permiten capturar la deficiencia en materiales de construcción y la inestabilidad del suelo para ser habitable,  como forma de aproximación a la informalidad de la vivienda en el vecindario, así mismo, se incluyen variables de mercado laboral como forma de capturar el efecto de este mercado sobre el precio del metro cuadrado dada la correlación que existe entre mercado laboral y vivienda encontrado en la ciudad de Medellín por García, Badillo, & Aristrizábal (2024).
+
+Los cambios demográficos de las ciudades también impactan el mercado de vivienda, Finney (2024) estima los cambios en la demanda de vivienda producidos por la migración en los Estados Unidos y la manera como estos cambios podrían estar cambiando la estructura de las áreas urbanas en ese país. Por esta razón es necesario controlar la migración incluyendo estas variables dentro del modelo a estimar. Estos cambios demográficos también pueden contemplar procesos de gentrificación en el que los que el ingreso y el nivel educativo pueden afectar el valor de la vivienda (Cole, Mehdipanah, Gullón, & Triguero, 2021). En este sentido, se incluyen variables de control como el nivel educativo promedio de las personas que viven en la manzana, el estrato y el índice de pobreza multidimensional.
+
+La economía del crimen tiene un amplio conjunto de estudios acerca del efecto que tiene la actividad criminal sobre el precio de la vivienda. Boggess, Greenbaum & Tita (2013) llegan a la conclusión de que el crimen conduce el precio de la vivienda en el contexto de Los Ángeles, generando mayor cantidad de transacciones de viviendas en los barrios con mayor nivel de crimen; Vetter, Beltrao, & Meseena (2013) estiman el impacto de la sensación de seguridad sobre el precio de las viviendas residenciales en las áreas metropolitanas de Brasil, encontrando también que los hogares de mayores ingresos sienten una mayor sensación de seguridad en sus viviendas lo que valoriza las propiedades. En este sentido, se decide incluir indicadores de seguridad como el número de robos dentro de las variables de control para capturar el efecto de la criminalidad sobre el precio del metro cuadrado en la ciudad.
+
+### Analisis descriptivo de las variables
+
+```{r}
+vis_iv<- vis_iv %>% 
+  filter(proyectos_en_mzn==0 & proyectos_a_400m==1)
+```
+
+La base de datos disponible para el ejercicio cuenta con un conjunto de variables que se dividen pueden clasificar variables en variables de seguridad, indicadores sociales, variables de mercado laboral, de migración, de precariedad de la vivienda y el vecindario y de accesos a servicios y economia. En el caso de las variables de seguridad se distribuyen de la siguiente forma.
+
+```{r}
+vis_iv %>% select(n_robos,robo_per) %>% summary()
+```
+
+La distribución de los indicadores sociales es:
+
+```{r}
+vis_iv %>% select(ipm,HogaresHacinados,EstratoPromedio) %>% summary()
+```
+
+La distribución de las variables de migración es:
+
+```{r}
+vis_iv %>% select(PorcentajeMigrantesInternacionales,
+  PorcentajeMigrantesIntermunicipales,
+  ) %>% summary()
+```
+
+La distribución de las variables de mercado laboral
+
+```{r}
+vis_iv %>% select(dependencia,Desempleados
+  ) %>% summary()
+```
+
+La distribución de las variables de precariedad de la vivienda y el vecindario es:
+
+```{r}
+vis_iv %>% select(CAT_Pendiente_Escarpado,CAT_EstadoVia_Malo,
+  aptitud_en_mzn,PrecariedadPromedio,
+  PorcentajeParedesPrecarias,
+  PorcentajePisosPrecarios,
+  PorcentajePrecariedadAcueducto,
+  PorcentajePrecariedadAlcantarillado) %>% summary()
+```
+
+La distribución de las variables de acceso a la economia y servicios es
+
+```{r}
+vis_iv %>% select(access_trabajo,access_estudio,access_salud,
+  dist_trans,dist_vias) %>% summary()
+
+```
+
+Al analizar la correlación que tienen estas variables de control con el precio del metro cuadrado se logra identificar que todas tienen una asociación importante con la variable de respuesta al tratamiento.
+
+```{r}
+#Se definen las variables de control
+control<-c(
+  #Seguridad
+  "n_robos","robo_per",
+  #Indicadores sociales
+  "ipm","HogaresHacinados","EstratoPromedio",
+  #Cambios demográficos
+  "PorcentajeMigrantesInternacionales",
+  "PorcentajeMigrantesIntermunicipales",
+  #Mercado laboral           
+  "dependencia","Desempleados",
+  #Precariedad de las viviendas y el vecindario
+  "CAT_Pendiente_Escarpado","CAT_EstadoVia_Malo",
+  "aptitud_en_mzn","PrecariedadPromedio",
+  "PorcentajeParedesPrecarias",
+  "PorcentajePisosPrecarios",
+  "PorcentajePrecariedadAcueducto",
+  "PorcentajePrecariedadAlcantarillado",
+  #Acceso a servicios y economia
+  "access_trabajo","access_estudio","access_salud",
+  "dist_trans","dist_vias")
+vis_iv %>% select(valor_m2,control) %>% cor() %>% as.data.frame()
+```
+
+### Resultados de la estimación
+
+Para realizar la estimación construimos un vector de variables de control y especificamos el modelo indicando que el logarito del precio del metro cuadrado está en función de la variable de tratamiento y estos controles. Adicionalmente se indica en la fución que la variable instrumental utilizada será `iv_vis`.
+
+```{r}
+modelo <- ivreg(
+  formula = as.formula(
+    paste0("log(valor_m2) ~ ", paste(control, collapse = "+"),
+           " + log(treat_vis) | ",
+           paste(control, collapse = "+"), 
+           " + iv_vis")),  
+  data = vis_iv)
+```
+
+```{r}
+library(sjPlot)
+tab_model(modelo, show.ci = FALSE, show.se = TRUE, show.p = TRUE, 
+          digits = 3)
+```
+
+Los resultados de la estimación arrojan un efecto significativo del indice de accesibilidad a la ubicación de los proyectos VIS sobre el precio promedio del metro cuadrado. Esto se puede interpretar como un impacto de los proyectos VIS sobre la valorización del vecindario. Este impacto es positivo, mostrando que por cada punto porcentual que aumenta el indice de accesibilidad de Hansen, el precio promedio del metro cuadrado se incrementa en 1.4 puntos porcentuales.
+
+```{r}
+test_instrumento<-as.data.frame(
+  summary(modelo,diagnostics=TRUE)$diagnostics)
+test_instrumento[1:2,3:4]
+```
+
+El test de instrumentos debiles permite rechazar la hipotesis nula de debilidad en el instrumento, por lo que la relación entre la variable instrumental y la variable de tratamiento es lo suficientemente fuerte para generar una estimación confiable. De otra parte el resultado test de Wu-Hausman permite confirmar la endogeneidad que existe entre el tratamiento y el precio del metro cuadrado, razón por la cual esta estimación por variables instrumentales ofrece un parámetro menos sesgado que OLS.
+
+# Recomendaciones de política
+
+El impacto que tienen los proyectos de vivienda de interés social sobre el vecindario se entienden como una externalidad positiva en el vecindario que aumenta el valor de la vivienda en los lugares cercanos a la ubicación de dichos proyectos. Esta valorización no solo impacta positivamente a los dueños de inmuebles cercanos a los proyectos VIS, también se puede traducir en el largo plazo en un mayor recaudo para el Estado por la via del impuesto predial, lo que genera una recuperación de la inversión destinada a estos proyectos.
+
+Los proyectos de vivienda de interés social tienen efectos positivos sobre el vecindario dado que produce una disminucion en el número de robos. Esta estrategia puede servir como forma de urbanización de vecindarios con altos indices de criminalidad. Además, la disminucion del número de robos y la mejoria en la seguridad, puede incrementar la inversión privada y estimular el comercio a nivel del vencindario.
+
+# Referencias
+
+Alkire, S., & Foster, J. (2011). Counting and multidimensional poverty measurement. Journal of Public Economics.
+
+Alonso, W. (1964). Location and land use: towards a general theory of land rent. Massachusetts: Institute of Technology and Harvard University.
+
+Boggess, L., Greenbaum, R., & Tita, G. (2013). Does crime drive housing sales? Evidence from Los Angeles. Journal of Crime and Justice, 36(3), 299-318.
+
+Boggess, L. N., & Hipp, J. R. (2010). Violent crime, residential instability and mobility: Does the relationship differ in minority neighborhoods? Journal of Quantitative Criminology, 26(3). <https://doi.org/10.1007/s10940-010-9093-7>
+
+Bourguignon, F. (2003). The growth elasticity of poverty reduction. In Inequality and Growth: Theory and Policy Implications.
+
+Card, D. (1999). The causal effect of education on earnings. In Handbook of Labor Economics.
+
+Cao, L., & Maume, D. J. (1993). Urbanization, inequality, lifestyles and robbery: A comprehensive model. Sociological Focus, 26(1). <https://doi.org/10.1080/00380237.1993.10570993>
+
+Cole, H., Mehdipanah, R., Gullón, P., & Triguero, M. (2021). Breaking down and building up: gentrification, its drivers, and urban health inequality. Current Environmental Health Reports, 8, 157-166.
+
+Duranton, G., & Turner, M. A. (2011). The fundamental law of road congestion: Evidence from US cities. American Economic Review.
+
+Fields, G. S. (2011). Working Hard, Working Poor.
+
+Finney, M. (2024). Inmigration and the demand for urban housing. The Annals of Regional Science, 72, 601-616.
+
+García, G., Badillo, E., & Aristrizábal, J. (2024). Housing informality and labor informality in space: In search of the missing links. Applied Spatial Analysis and Policy, 17, 923-949.
+
+Glaeser, E. L. (2010). Triumph of the City.
+
+Lacoe, J., Bostic, R. W., & Acolin, A. (2018). Crime and private investment in urban neighborhoods. Journal of Urban Economics, 108. <https://doi.org/10.1016/j.jue.2018.11.001>
+
+Vetter, D., Beltrao, K., & Meseena, R. (2013). The impact of the sense of security from crime on residential property values in Brazilian metropolitan areas. IDB Working Paper.

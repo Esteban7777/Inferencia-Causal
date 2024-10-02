@@ -44,7 +44,7 @@ late=df %>%
   summarise(late=mean(effect,na.rm = T))
 
 
-### SE hacen graficas para verificar el comportamiento de las variables Del intrumento
+### SE hacen graficas para verificar el comportamiento de las variables Del instrumento
 
 df_iv<- df %>% 
   filter(pop!= "defier") %>% 
