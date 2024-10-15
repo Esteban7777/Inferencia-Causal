@@ -1,6 +1,8 @@
 #Cargar los datos y paquetes
-setwd("C:/Users/HP-Laptop/OneDrive - Universidad de Antioquia/Maestría en Economía/Evaluación de impacto/Inferencia-Causal")
-load("Inferencia_causal/estratos_2y3_rdd.RData")
+load("estratos_2y3_rdd.RData")
+
+
+
 
 #Tratamiento
 table(estratos_2y3_rdd$treat)

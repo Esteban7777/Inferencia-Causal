@@ -1,0 +1,106 @@
+---
+title: "RRD"
+author: "Wilmer Rojas & William Aguirre & John Esteban Londoño"
+date: "2024-10-15"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r}
+library(tidyverse)
+library(rddensity)
+library(rdrobust)
+```
+
+
+```{r}
+load("estratos_2y3_rdd.RData")
+```
+
+
+# Introducción
+
+El propósito de este trabajo es estimar los efectos de la estratificación socioeconómica en la ciudad de Medellín, enfocándose específicamente en cómo dicha estratificación afecta el valor de las rentas y otros indicadores de calidad del hábitat en los diferentes barrios. La estratificación socioeconómica es una característica única del sistema colombiano, que asigna un estrato de 1 a 6 a las viviendas según el nivel socioeconómico del área en la que se encuentran, y es utilizado para definir subsidios y tarifas de servicios públicos. Este sistema, aunque útil en muchos casos, también puede tener efectos no deseados sobre los precios de la vivienda, la distribución de la riqueza y el acceso a servicios públicos y oportunidades de empleo en distintos sectores de la ciudad.
+
+En particular, este estudio tiene como objetivo analizar cómo el hecho de que una vivienda se encuentre en un estrato determinado puede influir en el valor de su renta, así como en otros factores relacionados con la calidad del hábitat, como la densidad poblacional, la accesibilidad a servicios comerciales y la proporción de migrantes en el barrio. A través de un enfoque empírico, utilizando datos sobre los estratos 2 y 3 en Medellín, se buscará comprender mejor las implicaciones económicas y sociales de esta categorización, para eventualmente proponer recomendaciones de política pública que puedan mitigar cualquier impacto negativo que se detecte.
+
+# Analisis exploratorio de los datos
+
+
+```{r}
+summary(estratos_2y3_rdd$valor_m2)
+```
+El resumen estadístico de la variable `valor_m2` muestra una considerable dispersión en los valores de renta por metro cuadrado en los estratos 2 y 3 de Medellín. El valor mínimo es de 5,220, mientras que el valor máximo alcanza los 10,774,862, lo que refleja una gran variabilidad en los precios del suelo. El valor promedio (media) es de 764,462, mientras que la mediana, que representa el punto medio de los datos, es de 598,890, lo que sugiere que la distribución está sesgada hacia valores más altos, probablemente debido a algunos valores atípicos en el extremo superior. Además, el primer cuartil (450,015) y el tercer cuartil (797,218) indican que el 50% central de los valores se encuentra dentro de este rango.
+
+```{r}
+estratos_2y3_rdd %>%
+  group_by(estrato) %>%
+  summarise(
+    Min = min(valor_m2, na.rm = TRUE),
+    Q1 = quantile(valor_m2, 0.25, na.rm = TRUE),
+    Median = median(valor_m2, na.rm = TRUE),
+    Mean = mean(valor_m2, na.rm = TRUE),
+    Q3 = quantile(valor_m2, 0.75, na.rm = TRUE),
+    Max = max(valor_m2, na.rm = TRUE)
+  )
+
+```
+El resumen estadístico para la variable `valor_m2` en los estratos 2 y 3 muestra diferencias notables. En el estrato 2, el valor mínimo es de 5,220 y el máximo llega a 5,362,617, con una mediana de 495,030 y una media de 508,414.7, lo que indica una distribución de precios más baja y relativamente menos dispersa. En contraste, el estrato 3 presenta valores más altos, con un mínimo de 15,419 y un máximo de 10,774,862. La mediana en el estrato 3 es de 818,916.3 y la media es considerablemente más alta, con 1,129,828.8, lo que sugiere una mayor variabilidad en los precios por metro cuadrado, probablemente debido a la presencia de valores atípicos hacia el extremo superior. Estos resultados reflejan una clara diferencia en los valores de renta por metro cuadrado entre ambos estratos, con los precios siendo considerablemente más altos en el estrato 3.
+
+```{r}
+estratos_2y3_rdd %>%
+  group_by(estrato) %>%
+  summarise(
+    Min = min(viv_informal, na.rm = TRUE),
+    Q1 = quantile(viv_informal, 0.25, na.rm = TRUE),
+    Median = median(viv_informal, na.rm = TRUE),
+    Mean = mean(viv_informal, na.rm = TRUE),
+    Q3 = quantile(viv_informal, 0.75, na.rm = TRUE),
+    Max = max(viv_informal, na.rm = TRUE)
+  )
+```
+
+
+
+# Comprobación si es nitido
+
+```{r}
+ggplot(estratos_2y3_rdd, aes(x = score, y =treat )) +
+  geom_point(alpha = 0.3) + 
+  labs(title = "Probabilidad de ser estrato 2 dado el Score",
+       x = "Score", y = "Probabilidad de ser tratado") +
+  theme_minimal()
+```
+
+ El tipo de regresión discontinua es nitida dado que la probabilidad de recibir subsidio depende  del score (distancia a la frontera), esta probabilidad cambia abruptamente cuando la distancia a la frontera es mayor o igual a cero, las manzanas son clasificadas como estrato 2 y reciben subsidio.
+ 
+ 
+ 
+# test de MaCrary
+
+```{r}
+mccrary_test <- rddensity(estratos_2y3_rdd$score)
+summary(mccrary_test)
+```
+
+El test arroja resultados basados en un análisis de discontinuidad alrededor de un punto de corte (c = 0). Se analizaron 8,106 observaciones, divididas en 3,318 a la izquierda del punto de corte y 4,788 a la derecha. El número efectivo de observaciones utilizadas para la estimación fue menor: 550 a la izquierda y 1,380 a la derecha, debido a la técnica de suavizado. El método aplicado fue un kernel triangular, y el ancho de banda estimado (h) fue de 945.461 y 1267.751 para cada lado del punto de corte.
+
+El test robusto arrojó un valor T de -1.3321 con un valor p de 0.1828, lo que indica que no se encontró evidencia suficiente para rechazar la hipótesis nula de que no hay manipulación en la densidad alrededor del punto de corte. En otras palabras, los resultados sugieren que no hubo un cambio abrupto en la distribución de las observaciones cerca del umbral, lo que fortalece la validez del diseño de regresión discontinua.
+
+
+# Efecto causal
+```{r}
+rd_result <- rdrobust(
+    y = estratos_2y3_rdd$valor_m2, 
+    x = estratos_2y3_rdd$score 
+)
+
+summary(rd_result)
+```
+El coeficiente estimado indica la magnitud del cambio en el valor del metro cuadrado cuando se cruza el umbral entre los estratos. Si este coeficiente es negativo, sugiere que a medida que los hogares se acercan al estrato 2, el valor de la vivienda tiende a disminuir, lo que puede reflejar la percepción de menor calidad del hábitat en estratos más bajos o la presencia de desigualdades económicas en Medellín. La significancia estadística de los resultados, indicada por un valor p bajo, refuerza la idea de que la distancia a la frontera estratificada tiene un impacto real en el valor de la propiedad.
+
+
+# Recomendación de política
+
+Se recomienda implementar políticas económicas que incluyan inversiones en infraestructura y servicios públicos en los barrios de estrato 2 de Medellín, ya que el análisis revela un efecto negativo en el valor del metro cuadrado al cruzar el umbral entre los estratos. Estas políticas podrían incluir subsidios para la renovación de viviendas, desarrollo de espacios comunitarios, programas de capacitación laboral y incentivos fiscales para empresas que inviertan en la zona, con el objetivo de mejorar la calidad del hábitat, reducir desigualdades económicas y fomentar un desarrollo urbano más equitativo y sostenible.
