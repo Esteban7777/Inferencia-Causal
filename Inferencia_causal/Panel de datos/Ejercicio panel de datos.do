@@ -169,3 +169,20 @@ destring ingreso jefe e_civil raza educacion ///
  
 des
 
+* Comuna ///
+tab comuna
+
+replace comuna="Robledo" if comuna=="Ciudadela de Occidente"
+replace comuna="Belén" if comuna=="Belen"
+replace comuna="Doce de Octubre" if comuna=="Doce De Octubre"
+replace comuna="La América" if comuna=="La America"
+replace comuna = "Laureles Estadio" if comuna == "Laureles-Estadio" | comuna == "Laureles Estado"
+
+tab comuna
+
+*Agregar las varibles
+
+collapse (mean) edad ingreso hijos (sum) sexo jefe e_civil raza leer educacion afiliacion trabajo D planifica FE_P[w=FE_P], by(year comuna)
+
+rename FE_P poblacion
+
