@@ -169,6 +169,46 @@ destring ingreso jefe e_civil raza educacion ///
  
 des
 
+
+*Sexo jefe ///
+
+gen sexo_jefe= sexo * jefe
+
+*Estado civil jefe ///
+gen e_civil_jefe= sexo * e_civil
+
+* Madre soletera ///
+gen madre_soltera= e_civil_jefe * sexo_jefe
+
+* Raza jefe ///
+gen raza_jefe= raza * jefe
+
+
+* Leer jefe
+gen leer_jefe= leer * jefe
+
+* Educación jefe
+gen educacion_jefe= educacion * jefe
+
+*Afiliacion jefe
+gen afiliacion_jefe= afiliacion * jefe
+
+*Trabajo jefe
+gen trabajo_jefe= trabajo * jefe
+
+*Planifica jefe
+gen planifica_jefe= planifica * jefe
+
+*Tratamiento jefe
+gen D_jefe= D * jefe
+
+*Menores de edad ///
+gen menor= 1 if edad<18 
+
+*Menores con hijos
+gen menor_hijos= menor * hijos
+
+
 * Comuna ///
 tab comuna
 
@@ -180,9 +220,27 @@ replace comuna = "Laureles Estadio" if comuna == "Laureles-Estadio" | comuna == 
 
 tab comuna
 
-*Agregar las varibles
 
-collapse (mean) edad ingreso hijos (sum) sexo jefe e_civil raza leer educacion afiliacion trabajo D planifica FE_P[w=FE_P], by(year comuna)
+save data_consolidada.dta
 
-rename FE_P poblacion
+*Agregar las varibles de hogar
+
+collapse (mean) edad ingreso hijos (sum) madre_soltera raza_jefe leer_jefe educacion_jefe afiliacion_jefe trabajo_jefe D_jefe planifica_jefe FE_H[w=FE_H], by(year comuna)
+rename FE_H hogares
+
+save agregacion_hogares.dta
+
+*Agregar las variables de personas
+collapse (sum) menor_hijos FE_P[w=FE_P], by(year comuna)
+
+save agregacion_personas.dta
+
+
+*Se unen variables de peronas y hogares
+clear all
+
+use agregacion_personas.dta, clear  
+merge 1:1 comuna using agregacion_hogares.dta
+
+
 
