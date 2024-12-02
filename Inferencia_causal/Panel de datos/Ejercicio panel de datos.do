@@ -171,43 +171,52 @@ des
 
 
 *Sexo jefe ///
-
 gen sexo_jefe= sexo * jefe
+tab sexo_jefe
 
 *Estado civil jefe ///
 gen e_civil_jefe= sexo * e_civil
+tab e_civil_jefe
 
 * Madre soletera ///
 gen madre_soltera= e_civil_jefe * sexo_jefe
+tab madre_soltera
 
 * Raza jefe ///
 gen raza_jefe= raza * jefe
+tab raza_jefe
 
-
-* Leer jefe
+* Leer jefe ///
 gen leer_jefe= leer * jefe
+tab leer_jefe
 
-* Educación jefe
+* Educación jefe ///
 gen educacion_jefe= educacion * jefe
+tab educacion_jefe
 
-*Afiliacion jefe
+*Afiliacion jefe ///
 gen afiliacion_jefe= afiliacion * jefe
+tab afiliacion_jefe
 
-*Trabajo jefe
+*Trabajo jefe ///
 gen trabajo_jefe= trabajo * jefe
+tab trabajo_jefe
 
-*Planifica jefe
+*Planifica jefe ///
 gen planifica_jefe= planifica * jefe
+tab planifica_jefe
 
-*Tratamiento jefe
+*Tratamiento jefe ///
 gen D_jefe= D * jefe
+tab D_jefe
 
 *Menores de edad ///
 gen menor= 1 if edad<18 
+tab menor
 
-*Menores con hijos
+*Menores con hijos ///
 gen menor_hijos= menor * hijos
-
+tab menor_hijos
 
 * Comuna ///
 tab comuna
@@ -220,27 +229,55 @@ replace comuna = "Laureles Estadio" if comuna == "Laureles-Estadio" | comuna == 
 
 tab comuna
 
+* Llave de hogar ///
+gen skHogar = string(year) + "_" + string(Form) + "_" + string(Hogar)
 
 save data_consolidada.dta
 
 *Agregar las varibles de hogar
+collapse (first) year comuna FEV_H (sum) ingreso hijos menor_hijos madre_soltera raza_jefe leer_jefe educacion_jefe afiliacion_jefe trabajo_jefe D_jefe planifica_jefe, by(skHogar)
 
-collapse (mean) edad ingreso hijos (sum) madre_soltera raza_jefe leer_jefe educacion_jefe afiliacion_jefe trabajo_jefe D_jefe planifica_jefe FE_H[w=FE_H], by(year comuna)
-rename FE_H hogares
-
-save agregacion_hogares.dta
-
-*Agregar las variables de personas
-collapse (sum) menor_hijos FE_P[w=FE_P], by(year comuna)
-
-save agregacion_personas.dta
-
-
-*Se unen variables de peronas y hogares
-clear all
-
-use agregacion_personas.dta, clear  
-merge 1:1 comuna using agregacion_hogares.dta
+tab year
+tab comuna
+tab hijos
+tab menor_hijos
+tab madre_soltera
+tab raza_jefe
+tab leer_jefe
+tab educacion_jefe 
+tab afiliacion_jefe
+tab trabajo_jefe 
+tab D_jefe
+tab planifica_jefe
 
 
+*Se homogenizan todas las vairables a dumm
+
+replace menor_hijos=1 if menor_hijos>0
+replace madre_soltera=1 if madre_soltera>0
+replace raza_jefe=1 if raza_jefe>0
+replace leer_jefe=1 if leer_jefe>0
+replace educacion_jefe=1 if educacion_jefe>0
+replace afiliacion_jefe=1 if afiliacion_jefe>0
+replace trabajo_jefe=1 if trabajo_jefe>0
+replace D_jefe=1 if D_jefe>0
+replace planifica_jefe=1 if planifica_jefe>0
+
+*Validar
+tab menor_hijos
+tab madre_soltera
+tab raza_jefe
+tab leer_jefe
+tab educacion_jefe 
+tab afiliacion_jefe
+tab trabajo_jefe 
+tab D_jefe
+tab planifica_jefe
+
+save data_consolidada_hogares.dta
+
+*Agregar las variables a nivel de comuna
+collapse (mean) ingreso hijos (sum) madre_soltera raza_jefe leer_jefe educacion_jefe  afiliacion_jefe trabajo_jefe  D_jefe planifica_jefe menor_hijos FEV_H[w=FEV_H], by(year comuna)
+
+save panel_comunas.dta
 
