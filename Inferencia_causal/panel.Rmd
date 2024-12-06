@@ -1,0 +1,37 @@
+---
+title: "Panel"
+author: "John Esteban"
+date: "2024-12-06"
+output: html_document
+---
+
+```{r}
+library(haven)
+library(tidyverse)
+```
+
+```{r}
+panel_data <-read_dta('Panel de datos/panel_comunas.dta')
+```
+
+```{r}
+consolidada <-read_dta('Panel de datos/data_consolidada.dta')
+consolidada_hogares <-read_dta('Panel de datos/data_consolidada_hogares.dta')
+```
+
+```{r}
+consolidada %>% 
+  group_by(comuna) %>% 
+  summarise(mean(hijos))
+```
+
+
+
+```{r}
+consolidada
+```
+
+
+
+
+
