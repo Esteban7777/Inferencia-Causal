@@ -8,6 +8,9 @@ output: html_document
 ```{r}
 library(haven)
 library(tidyverse)
+library(spdep)
+library(sf)
+library("tmap")
 ```
 
 ```{r}
@@ -20,18 +23,95 @@ consolidada_hogares <-read_dta('Panel de datos/data_consolidada_hogares.dta')
 ```
 
 ```{r}
-consolidada %>% 
-  group_by(comuna) %>% 
-  summarise(mean(hijos))
+med <- st_read("LimiteComunaCorregimiento_2014.shp")
 ```
+
+
+## Numero de hogares con menores de edad que ya teienen hijos por comuna
+## Tratamiento , la información de planificación que tiene el jefe de hogar
+
 
 
 
 ```{r}
-consolidada
+maestro <- data.frame(
+  CODIGO = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "16", 
+             "50", "60", "70", "90", "SN02", "80", "SN01", "15"),
+  NOMBRE = c("Popular", "Santa Cruz", "Manrique", "Aranjuez", "Castilla", "Doce de Octubre", 
+             "Robledo", "Villa Hermosa", "Buenos Aires", "La Candelaria", "Laureles Estadio", 
+             "La América", "San Javier", "El Poblado", "Belén", 
+             "Corregimiento de San Sebastián de Palmitas", "Corregimiento de San Cristóbal", 
+             "Corregimiento de Altavista", "Corregimiento de Santa Elena", "Sin nombre 2", 
+             "Corregimiento de San Antonio de Prado", "Sin nombre 1", "Guayabal")
+)
+maestro$CODIGO <- ifelse(nchar(maestro$CODIGO) == 1 & grepl("^[0-9]$", maestro$CODIGO), 
+                         paste0("0", maestro$CODIGO), 
+                         maestro$CODIGO)
 ```
 
 
+```{r}
+panel_data <- merge(panel_data,maestro,by.x ='comuna', by.y='NOMBRE')
+```
 
+```{r}
+df <- merge(med,panel_data,by='CODIGO')
+```
+
+
+```{r}
+df %>% 
+  filter(year==2012) %>%
+  mutate(texto_mapa = paste0(comuna, ": ", menor_hijos)) %>% 
+  tm_shape() +
+  tm_fill('menor_hijos', palette = 'Greens', style = 'quantile', n = 3, title = 'Proporción') +
+  tm_borders(alpha = 0.4) +
+  tm_text('comuna', size = 0.5) +
+  tm_legend(show = TRUE) +  # Eliminar la leyenda
+  tm_layout(
+    title = "Porcentaje de menores de edad con hijos 2012",
+    title.position = c("center", "top")
+  )
+
+df %>% 
+  filter(year==2013) %>%
+  mutate(texto_mapa = paste0(comuna, ": ", menor_hijos)) %>% 
+  tm_shape() +
+  tm_fill('menor_hijos', palette = 'Greens', style = 'quantile', n = 3, title = 'Proporción') +
+  tm_borders(alpha = 0.4) +
+  tm_text('comuna', size = 0.5) +
+  tm_legend(show = TRUE) +  # Eliminar la leyenda
+  tm_layout(
+    title = "Porcentaje de menores de edad con hijos 2012",
+    title.position = c("center", "top")
+  )
+
+df %>% 
+  filter(year==2013) %>%
+  mutate(texto_mapa = paste0(comuna, ": ", menor_hijos)) %>% 
+  tm_shape() +
+  tm_fill('D_jefe', palette = 'Greens', style = 'quantile', n = 3, title = 'Proporción') +
+  tm_borders(alpha = 0.4) +
+  tm_text('comuna', size = 0.5) +
+  tm_legend(show = TRUE) +  # Eliminar la leyenda
+  tm_layout(
+    title = "Porcentaje de menores de edad con hijos 2012",
+    title.position = c("center", "top")
+  )
+
+
+df %>% 
+  filter(year==2013) %>%
+  mutate(texto_mapa = paste0(comuna, ": ", menor_hijos)) %>% 
+  tm_shape() +
+  tm_fill('D_jefe', palette = 'Greens', style = 'quantile', n = 3, title = 'Proporción') +
+  tm_borders(alpha = 0.4) +
+  tm_text('comuna', size = 0.5) +
+  tm_legend(show = TRUE) +  # Eliminar la leyenda
+  tm_layout(
+    title = "Porcentaje de menores de edad con hijos 2012",
+    title.position = c("center", "top")
+  )
+```
 
 
