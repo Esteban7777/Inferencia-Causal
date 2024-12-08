@@ -1,5 +1,5 @@
 ***************************************************************************
-***		 Ejercicio panel de datos: efecto de la educación sexual en la  ***
+***	 Procesamiento panel de datos: efecto de la educación sexual en la  ***
 ***	   		 la fecundidad en las comunas de Medellín                   ***
 ***		Autores: Wilmer Rojas, John Esteban Londoño & William Aguirre 	***
 ***************************************************************************
@@ -278,6 +278,18 @@ save data_consolidada_hogares.dta
 
 *Agregar las variables a nivel de comuna
 collapse (mean) ingreso hijos (sum) madre_soltera raza_jefe leer_jefe educacion_jefe  afiliacion_jefe trabajo_jefe  D_jefe planifica_jefe menor_hijos FEV_H[w=FEV_H], by(year comuna)
+
+*Calcular porcentajes
+gen por_madre_sotera = madre_soltera / FEV_H
+gen por_raza_jefe = raza_jefe / FEV_H
+gen por_leer_jefe = leer_jefe /FEV_H
+gen por_educacion_jefe = educacion_jefe / FEV_H
+gen por_afiliacion_jefe = afiliacion_jefe / FEV_H
+gen por_trabajo_jefe  = trabajo_jefe / FEV_H
+gen por_D_jefe = D_jefe / FEV_H
+gen por_planifica_jefe = planifica_jefe /FEV_H
+gen por_menor_hijos = menor_hijos / FEV_H
+
 
 save panel_comunas.dta
 
