@@ -1,0 +1,45 @@
+{\rtf1\fs24
+\trowd\trgaph75\trleft-75\intbl\trqc\clbrdrt\brdrs\cellx3024\clbrdrt\brdrs\cellx5184
+\ql \cell\qc (1)\cell\row
+\trowd\trgaph75\trleft-75\trqc\cellx3024\cellx5184
+\trowd\trgaph75\trleft-75\trqc\clbrdrb\brdrs\cellx3024\clbrdrb\brdrs\cellx5184
+\ql VARIABLES\cell\qc Modelo APA\cell\row
+\trowd\trgaph75\trleft-75\trqc\cellx3024\cellx5184
+\ql \cell\qc \cell\row
+\ql por_menor_hijos\cell\qc .\cell\row
+\ql \cell\qc (. - .)\cell\row
+\ql \cell\qc .\cell\row
+\ql \cell\qc \cell\row
+\ql por_D_jefe\cell\qc -0.028*\cell\row
+\ql \cell\qc (-0.06 - 0.01)\cell\row
+\ql \cell\qc 0.09\cell\row
+\ql \cell\qc \cell\row
+\ql por_trabajo_jefe\cell\qc 0.043**\cell\row
+\ql \cell\qc (0.00 - 0.08)\cell\row
+\ql \cell\qc 0.04\cell\row
+\ql \cell\qc \cell\row
+\ql por_afiliacion_jefe\cell\qc 0.017\cell\row
+\ql \cell\qc (-0.02 - 0.05)\cell\row
+\ql \cell\qc 0.37\cell\row
+\ql \cell\qc \cell\row
+\ql por_raza_jefe\cell\qc -0.107\cell\row
+\ql \cell\qc (-0.25 - 0.04)\cell\row
+\ql \cell\qc 0.13\cell\row
+\ql \cell\qc \cell\row
+\ql por_madre_sotera\cell\qc -0.073\cell\row
+\ql \cell\qc (-0.16 - 0.02)\cell\row
+\ql \cell\qc 0.11\cell\row
+\ql \cell\qc \cell\row
+\ql Constant\cell\qc 0.000**\cell\row
+\ql \cell\qc (0.00 - 0.00)\cell\row
+\ql \cell\qc 0.01\cell\row
+\ql \cell\qc \cell\row
+\ql \cell\qc \cell\row
+\ql Observations\cell\qc 42\cell\row
+\ql Number of cod_comuna\cell\qc 21\cell\row
+\trowd\trgaph75\trleft-75\trqc\trbrdrb\brdrs\clbrdrb\brdrs\cellx3024\clbrdrb\brdrs\cellx5184
+\ql R-squared\cell\qc 0.44\cell\row
+\pard\qc
+ci N in parentheses\par
+*** p<0.01, ** p<0.05, * p<0.1\par
+}
