@@ -5,7 +5,7 @@
 ***************************************************************************
 
 clear all
-cd "C:\Users\HP-Laptop\OneDrive - Universidad de Antioquia\Maestría en Economía\Evaluación de impacto\Inferencia-Causal\Inferencia_causal\Panel de datos\"
+cd "C:\Users\zulet\OneDrive\Escritorio\Maestría Economía\III Semestre\Inferencia causal\GitHub\Inferencia-Causal\Inferencia-Causal\Inferencia_causal\Panel de datos"
 
 use panel_comunas.dta, clear  
 
@@ -19,12 +19,12 @@ twoway (scatter por_planifica_jefe por_menor_hijos) (lfit por_planifica_jefe por
 	
 	
 twoway (scatter  por_D_jefe por_planifica_jefe) (lfit  por_D_jefe por_planifica_jefe), ///
-    title("% de jefes de hogar que planifican vs % de jefes de hogar que cuentan con información de planificación") ///
+    title("Planificación jefe hogar vs información anticonceptivo") ///
     xlabel(, grid) ylabel(, grid)
 	
 	
 twoway (scatter  por_D_jefe por_menor_hijos) (lfit  por_D_jefe por_menor_hijos), ///
-    title("% de hogares con menores con hijos vs % de jefes de hogar que cuentan con información de planificación") ///
+    title(" hogares con padres menores de edad vs información planificación") ///
     xlabel(, grid) ylabel(, grid)
 
 	
@@ -72,11 +72,17 @@ xtreg por_menor_hijos por_D_jefe por_planifica_jefe por_trabajo_jefe por_afiliac
 *Modelo 4 Retirando educación_jefe
 xtreg por_menor_hijos por_D_jefe por_planifica_jefe por_trabajo_jefe por_afiliacion_jefe por_raza_jefe por_madre_sotera ingreso, fe
 
+
 *Modelo 5 retirando planifica_jefe
 xtreg por_menor_hijos por_D_jefe por_trabajo_jefe por_afiliacion_jefe por_raza_jefe por_madre_sotera ingreso, fe
 
+
 *Modelo 6 retirando ingreso
 xtreg por_menor_hijos por_D_jefe por_trabajo_jefe por_afiliacion_jefe por_raza_jefe por_madre_sotera, fe
+outreg2 using resultados.doc, append ctitle("EFECTOS FIJOS") word
+outreg2 using Modeloefectosfijos.doc, replace ///    
+word dec(2) ctitle("Modelo APA") /// 
+    bdec(3) se stats(coef ci pval N)
 
 estimates store fe
 
@@ -84,7 +90,12 @@ estimates store fe
 predict res_fe, resid 
 
 xtreg por_menor_hijos por_D_jefe por_trabajo_jefe por_afiliacion_jefe por_raza_jefe por_madre_sotera, re
+outreg2 using resultados.doc, append ctitle("EFECTOS ALEATORIOS") word
+outreg2 using Modeloefectosaleatorios.doc, replace ///    
+word dec(2) ctitle("Modelo APA") /// 
+    bdec(3) se stats(coef ci pval N)
 estimates store re
+
 
 *Se calcula los residuales para el modelo de efectos aleatorios
 predict res_re,  ue 
@@ -106,3 +117,7 @@ twoway (scatter res_fe cod_comuna, msymbol(o) mcolor(blue)) ///
    
 *Estimar el modelo por OLS
 reg por_menor_hijos por_D_jefe por_trabajo_jefe por_afiliacion_jefe por_raza_jefe por_madre_sotera
+outreg2 using resultados.doc, append ctitle("OLS") word
+outreg2 using ModeloOLS.doc, replace ///    
+word dec(2) ctitle("Modelo APA") /// 
+    bdec(3) se stats(coef ci pval N)

@@ -1,0 +1,36 @@
+	(1)
+VARIABLES	Modelo APA
+	
+por_menor_hijos	.
+	(. - .)
+	.
+	
+por_D_jefe	-0.039***
+	(-0.06 - -0.02)
+	0.00
+	
+por_trabajo_jefe	0.023**
+	(0.00 - 0.04)
+	0.03
+	
+por_afiliacion_jefe	0.031**
+	(0.01 - 0.05)
+	0.01
+	
+por_raza_jefe	0.006
+	(-0.08 - 0.09)
+	0.89
+	
+por_madre_sotera	-0.016
+	(-0.06 - 0.02)
+	0.42
+	
+Constant	0.000***
+	(0.00 - 0.00)
+	0.00
+	
+	
+Observations	42
+R-squared	0.49
+ci N in parentheses	
+*** p<0.01, ** p<0.05, * p<0.1	
