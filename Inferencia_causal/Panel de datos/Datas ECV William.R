@@ -99,3 +99,45 @@ data2021<-data2021 %>% select(variables)
 summary(data2021)
 
 writexl::write_xlsx(data2021,"C:/Users/HP-Laptop/OneDrive - Universidad de Antioquia/Maestría en Economía/Evaluación de impacto/Inferencia-Causal/Inferencia_causal/Panel de datos/2021.xlsx")
+
+
+#2019
+names(ECV_2019)
+table(ECV_2019$P_6)
+
+data2019<- ECV_2019 %>% 
+  mutate(
+    comuna = as.numeric(P_6),
+    year = 2019,
+    ingreso = as.numeric(P_244),
+    jefe = ifelse(P_17=="1",1,0),
+    e_civil = ifelse(P_20=="1",1,0),
+    raza =  case_when(P_23=="-98" ~0,
+                      P_23=="-99" ~0,
+                      P_23=="3" ~0,
+                      P_23=="4" ~0,
+                      .default = 1),
+    sexo = ifelse(P_15=="2",1,0),
+    educacion = ifelse(as.numeric(P_45)>6,1,0),
+    leer = ifelse(P_35=="1",1,0),
+    hijos = ifelse(as.numeric(P_58)>0,1,0),
+    afiliacion = case_when(P_66=="6"~1,
+                           P_66=="7"~1,
+                           .default = 0),
+    trabajo = ifelse(P_69=="1",1,0),
+    planifica = ifelse(P_308=="1",1,0),
+    D = ifelse(P_307=="1",1,0),
+    edad = as.numeric(P_18),
+    menor = ifelse(edad<18,1,0),
+    idVivienda = as.numeric(Form),
+    idHogar = as.numeric(paste0(idVivienda,Hogar)),
+    idPersona = as.numeric(paste0(idVivienda,Orden)),
+    hogares =as.numeric(FEVH)
+  )
+
+data2019<-data2019 %>% select(variables)
+
+summary(data2019)
+
+writexl::write_xlsx(data2019,"C:/Users/HP-Laptop/OneDrive - Universidad de Antioquia/Maestría en Economía/Evaluación de impacto/Inferencia-Causal/Inferencia_causal/Panel de datos/2019.xlsx")
+
