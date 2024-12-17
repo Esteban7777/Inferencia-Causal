@@ -56,29 +56,46 @@ replace cod_comuna = 70 if comuna == "Altavista"
 replace cod_comuna = 80 if comuna == "San Antonio de Prado"
 replace cod_comuna = 90 if comuna == "Santa Elena"
 
-xtset cod_comuna year
+xtset comuna year
 
 *Estimación de modelos
 
 *Modelo 1 con todas las variables
-xtreg por_menor_hijos por_D_jefe por_planifica_jefe por_trabajo_jefe por_afiliacion_jefe por_educacion_jefe por_leer_jefe por_raza_jefe por_madre_sotera ingreso hijos, fe
+xtreg por_menor_hijos por_D_jefe por_trabajo_jefe por_afiliacion_jefe por_educacion_jefe por_leer_jefe por_raza_jefe por_madre_soltera ingreso i.year, fe
+
+outreg2 using resultados.doc, append ctitle("EFECTOS FIJOS") word    
+word dec(2) ctitle("Modelo APA") /// 
+    bdec(3) se stats(coef ci pval N)
+
+estimates store fe
+* efecto aleatorio
+xtreg por_menor_hijos por_D_jefe por_trabajo_jefe por_afiliacion_jefe por_educacion_jefe por_leer_jefe por_raza_jefe por_madre_soltera ingreso i.year, re
+
+outreg2 using resultados.doc, append ctitle("EFECTOS ALEATORIOS") word 
+word dec(2) ctitle("Modelo APA") /// 
+    bdec(3) se stats(coef ci pval N)
+
+estimates store fe
+
+hausman fe re
+
 
 *Modelo 2 retirando los hijos promedio del hogar
-xtreg por_menor_hijos por_D_jefe por_planifica_jefe por_trabajo_jefe por_afiliacion_jefe por_educacion_jefe por_leer_jefe por_raza_jefe por_madre_sotera ingreso, fe
+xtreg por_menor_hijos por_D_jefe por_planifica_jefe por_trabajo_jefe por_afiliacion_jefe por_educacion_jefe por_leer_jefe por_raza_jefe por_madre_soltera ingreso i.year, fe
 
 *Modelo 3 Retirando leer_jefe
-xtreg por_menor_hijos por_D_jefe por_planifica_jefe por_trabajo_jefe por_afiliacion_jefe por_educacion_jefe por_raza_jefe por_madre_sotera ingreso, fe
+xtreg por_menor_hijos por_D_jefe por_planifica_jefe por_trabajo_jefe por_afiliacion_jefe por_educacion_jefe por_raza_jefe por_madre_soltera ingreso i.year, fe
 
 *Modelo 4 Retirando educación_jefe
-xtreg por_menor_hijos por_D_jefe por_planifica_jefe por_trabajo_jefe por_afiliacion_jefe por_raza_jefe por_madre_sotera ingreso, fe
+xtreg por_menor_hijos por_D_jefe por_planifica_jefe por_trabajo_jefe por_afiliacion_jefe por_raza_jefe por_madre_soltera ingreso i.year, fe
 
 
 *Modelo 5 retirando planifica_jefe
-xtreg por_menor_hijos por_D_jefe por_trabajo_jefe por_afiliacion_jefe por_raza_jefe por_madre_sotera ingreso, fe
+xtreg por_menor_hijos por_D_jefe por_trabajo_jefe por_afiliacion_jefe por_raza_jefe por_madre_soltera ingreso i.year, fe
 
 
 *Modelo 6 retirando ingreso
-xtreg por_menor_hijos por_D_jefe por_trabajo_jefe por_afiliacion_jefe por_raza_jefe por_madre_sotera, fe
+xtreg por_menor_hijos por_D_jefe por_trabajo_jefe por_afiliacion_jefe por_raza_jefe por_madre_soltera i.year, fe
 outreg2 using resultados.doc, append ctitle("EFECTOS FIJOS") word
 outreg2 using Modeloefectosfijos.doc, replace ///    
 word dec(2) ctitle("Modelo APA") /// 
@@ -89,7 +106,7 @@ estimates store fe
 *Se calcula los residuales para el modelo de efectos fijos
 predict res_fe, resid 
 
-xtreg por_menor_hijos por_D_jefe por_trabajo_jefe por_afiliacion_jefe por_raza_jefe por_madre_sotera, re
+xtreg por_menor_hijos por_D_jefe por_trabajo_jefe por_afiliacion_jefe por_raza_jefe por_madre_sotera i.year, re
 outreg2 using resultados.doc, append ctitle("EFECTOS ALEATORIOS") word
 outreg2 using Modeloefectosaleatorios.doc, replace ///    
 word dec(2) ctitle("Modelo APA") /// 

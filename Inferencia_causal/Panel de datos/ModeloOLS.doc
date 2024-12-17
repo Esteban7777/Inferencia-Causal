@@ -10,34 +10,82 @@
 \ql \cell\qc (. - .)\cell\row
 \ql \cell\qc .\cell\row
 \ql \cell\qc \cell\row
-\ql por_D_jefe\cell\qc -0.039***\cell\row
-\ql \cell\qc (-0.06 - -0.02)\cell\row
+\ql por_D_jefe\cell\qc 0.068***\cell\row
+\ql \cell\qc (0.04 - 0.09)\cell\row
 \ql \cell\qc 0.00\cell\row
 \ql \cell\qc \cell\row
-\ql por_trabajo_jefe\cell\qc 0.023**\cell\row
-\ql \cell\qc (0.00 - 0.04)\cell\row
+\ql por_trabajo_jefe\cell\qc -0.016\cell\row
+\ql \cell\qc (-0.04 - 0.00)\cell\row
+\ql \cell\qc 0.13\cell\row
+\ql \cell\qc \cell\row
+\ql por_afiliacion_jefe\cell\qc -0.005\cell\row
+\ql \cell\qc (-0.04 - 0.03)\cell\row
+\ql \cell\qc 0.74\cell\row
+\ql \cell\qc \cell\row
+\ql por_educacion_jefe\cell\qc -0.035***\cell\row
+\ql \cell\qc (-0.05 - -0.02)\cell\row
+\ql \cell\qc 0.00\cell\row
+\ql \cell\qc \cell\row
+\ql por_leer_jefe\cell\qc -0.044***\cell\row
+\ql \cell\qc (-0.07 - -0.02)\cell\row
+\ql \cell\qc 0.00\cell\row
+\ql \cell\qc \cell\row
+\ql por_raza_jefe\cell\qc 0.029\cell\row
+\ql \cell\qc (-0.06 - 0.11)\cell\row
+\ql \cell\qc 0.50\cell\row
+\ql \cell\qc \cell\row
+\ql por_madre_soltera\cell\qc -0.025\cell\row
+\ql \cell\qc (-0.07 - 0.02)\cell\row
+\ql \cell\qc 0.31\cell\row
+\ql \cell\qc \cell\row
+\ql ingreso\cell\qc 0.000\cell\row
+\ql \cell\qc (-0.00 - 0.00)\cell\row
+\ql \cell\qc 0.13\cell\row
+\ql \cell\qc \cell\row
+\ql 2013.year\cell\qc -0.000**\cell\row
+\ql \cell\qc (-0.00 - -0.00)\cell\row
+\ql \cell\qc 0.04\cell\row
+\ql \cell\qc \cell\row
+\ql 2014.year\cell\qc -0.000\cell\row
+\ql \cell\qc (-0.00 - 0.00)\cell\row
+\ql \cell\qc 0.71\cell\row
+\ql \cell\qc \cell\row
+\ql 2015.year\cell\qc 0.000**\cell\row
+\ql \cell\qc (0.00 - 0.00)\cell\row
+\ql \cell\qc 0.02\cell\row
+\ql \cell\qc \cell\row
+\ql 2016.year\cell\qc -0.000**\cell\row
+\ql \cell\qc (-0.00 - -0.00)\cell\row
 \ql \cell\qc 0.03\cell\row
 \ql \cell\qc \cell\row
-\ql por_afiliacion_jefe\cell\qc 0.031**\cell\row
-\ql \cell\qc (0.01 - 0.05)\cell\row
+\ql 2017.year\cell\qc -0.000***\cell\row
+\ql \cell\qc (-0.00 - -0.00)\cell\row
+\ql \cell\qc 0.00\cell\row
+\ql \cell\qc \cell\row
+\ql 2018.year\cell\qc -0.000***\cell\row
+\ql \cell\qc (-0.00 - -0.00)\cell\row
+\ql \cell\qc 0.00\cell\row
+\ql \cell\qc \cell\row
+\ql 2019.year\cell\qc -0.000***\cell\row
+\ql \cell\qc (-0.00 - -0.00)\cell\row
+\ql \cell\qc 0.00\cell\row
+\ql \cell\qc \cell\row
+\ql 2021.year\cell\qc -0.000**\cell\row
+\ql \cell\qc (-0.00 - -0.00)\cell\row
 \ql \cell\qc 0.01\cell\row
 \ql \cell\qc \cell\row
-\ql por_raza_jefe\cell\qc 0.006\cell\row
-\ql \cell\qc (-0.08 - 0.09)\cell\row
-\ql \cell\qc 0.89\cell\row
-\ql \cell\qc \cell\row
-\ql por_madre_sotera\cell\qc -0.016\cell\row
-\ql \cell\qc (-0.06 - 0.02)\cell\row
-\ql \cell\qc 0.42\cell\row
+\ql 2022.year\cell\qc -0.000***\cell\row
+\ql \cell\qc (-0.00 - -0.00)\cell\row
+\ql \cell\qc 0.01\cell\row
 \ql \cell\qc \cell\row
 \ql Constant\cell\qc 0.000***\cell\row
 \ql \cell\qc (0.00 - 0.00)\cell\row
 \ql \cell\qc 0.00\cell\row
 \ql \cell\qc \cell\row
 \ql \cell\qc \cell\row
-\ql Observations\cell\qc 42\cell\row
+\ql Observations\cell\qc 210\cell\row
 \trowd\trgaph75\trleft-75\trqc\trbrdrb\brdrs\clbrdrb\brdrs\cellx2880\clbrdrb\brdrs\cellx5184
-\ql R-squared\cell\qc 0.49\cell\row
+\ql R-squared\cell\qc 0.41\cell\row
 \pard\qc
 ci N in parentheses\par
 *** p<0.01, ** p<0.05, * p<0.1\par
